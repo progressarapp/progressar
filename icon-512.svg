@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="64" fill="#0A0A0A"/>
+  <rect width="512" height="512" rx="64" fill="url(#grad)"/>
+  <defs>
+    <radialGradient id="grad" cx="30%" cy="30%">
+      <stop offset="0%" stop-color="#1a0800"/>
+      <stop offset="100%" stop-color="#060606"/>
+    </radialGradient>
+  </defs>
+  <!-- Orange accent line top -->
+  <rect x="0" y="0" width="512" height="25" rx="64" fill="#FF5C00"/>
+  <rect x="0" y="25" width="512" height="25" fill="#FF5C00"/>
+  <!-- P letter -->
+  <text x="50%" y="62%" font-family="serif" font-weight="900" font-size="281" 
+        fill="#FF5C00" text-anchor="middle" dominant-baseline="middle"
+        letter-spacing="-2">P</text>
+</svg>
