@@ -689,6 +689,46 @@
   .wb-ex-check { width:20px; height:20px; border-radius:6px; border:2px solid var(--border2); display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0; transition:all 0.15s; }
   .wb-ex-row.selected .wb-ex-check { background:var(--orange); border-color:var(--orange); color:white; }
 
+  /* ── VALIDADOR DE ESTÍMULO ── */
+  .v-opt {
+    padding: 10px 8px;
+    background: #1A1A1A;
+    border: 1px solid #333;
+    border-radius: 10px;
+    color: #888;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .v-opt.selected {
+    background: rgba(255,92,0,0.12);
+    border-color: #FF5C00;
+    color: #FF5C00;
+  }
+  .v-rate {
+    width: 32px;
+    height: 32px;
+    background: #1A1A1A;
+    border: 1px solid #333;
+    border-radius: 8px;
+    color: #888;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+  }
+  .v-rate.selected {
+    background: #FF5C00;
+    border-color: #FF5C00;
+    color: white;
+  }
+
   /* ── CADÊNCIA / METRÔNOMO CSS ── */
   .cadencia-widget {
     background: var(--card2);
@@ -2017,9 +2057,7 @@
     <button class="nav-btn" id="nav-biblioteca" onclick="switchView('biblioteca')" aria-label="Biblioteca">
       🧬 <span class="tooltip">Biblioteca</span>
     </button>
-    <button class="nav-btn" id="nav-medidas" onclick="switchView('medidas')" aria-label="Medidas">
-      📏 <span class="tooltip">Medidas</span>
-    </button>
+
     <div style="flex:1;"></div>
 
     <button class="nav-btn" id="nav-foco" onclick="switchView('foco')" aria-label="Modo Foco">
@@ -2277,6 +2315,244 @@
       </div>
     </div>
 
+
+    <!-- PERFIL VIEW -->
+    <div class="view" id="view-perfil">
+      <div class="page-header">
+        <div class="page-title">PERFIL</div>
+      </div>
+      <div class="section">
+        <div class="card" style="margin-bottom:16px;">
+          <div style="display:flex; align-items:center; gap:16px; margin-bottom:20px;">
+            <div style="width:60px; height:60px; background:var(--orange-dim); border:2px solid var(--orange); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px;">🏋️</div>
+            <div>
+              <div style="font-family:'Bebas Neue'; font-size:28px; letter-spacing:1px;" id="profile-name">—</div>
+              <div style="font-size:13px; color:var(--muted2);" id="profile-level">—</div>
+            </div>
+          </div>
+          <hr class="sep" style="margin:0 0 16px;">
+          <div class="grid-2">
+            <div>
+              <div class="stat-label">Método de progressão</div>
+              <div style="font-weight:600; margin-top:4px;">Método Muzy (8–12 reps)</div>
+            </div>
+            <div>
+              <div class="stat-label">Objetivo</div>
+              <div style="font-weight:600; margin-top:4px;" id="profile-goal">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title" style="margin-bottom:16px;">SOBRE O MÉTODO</div>
+          <div style="background:var(--card2); border-radius:12px; padding:16px; border-left:3px solid var(--orange);">
+            <p style="font-size:13px; color:var(--muted2); line-height:1.7;">
+              <strong style="color:var(--text);">Como funciona a progressão automática:</strong><br>
+              1. Defina um peso que você consegue fazer 8 repetições<br>
+              2. Treine até conseguir 12 reps com boa técnica<br>
+              3. O app sugere aumentar a carga em 5–10%<br>
+              4. Com o novo peso, você volta a fazer 8 reps<br>
+              5. O ciclo se repete — isso é progresso real!
+            </p>
+          </div>
+          <p style="font-size:12px; color:var(--muted); margin-top:12px; font-style:italic;">
+            "Se não há progressão de carga, não há evolução no treino." — Paulo Muzy
+          </p>
+        </div>
+
+        <!-- Cardio stats card -->
+        <div class="card" style="margin-top:16px;" id="cardio-stats-card">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+            <div class="section-title" style="margin:0;">🏃 CARDIO</div>
+            <button class="btn btn-ghost" style="font-size:12px;" onclick="openModal('exercise-modal'); setTimeout(()=>setExerciseType('cardio'),100)">+ Registrar</button>
+          </div>
+          <div id="cardio-stats-content"><!-- filled by updateProfile --></div>
+        </div>
+
+        <div style="margin-top:16px;">
+          <button class="btn btn-ghost btn-full" onclick="resetApp()" style="color:var(--red); border-color:var(--red-dim);">
+            🗑 Resetar todos os dados
+          </button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- FOCO VIEW -->
+    <div class="view" id="view-foco">
+      <div id="foco-idle" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; text-align:center; padding:32px;">
+        <div style="font-size:64px; margin-bottom:16px;">🎯</div>
+        <div style="font-family:'Bebas Neue'; font-size:40px; letter-spacing:2px; margin-bottom:8px;">MODO FOCO</div>
+        <p style="color:var(--muted2); font-size:15px; line-height:1.6; max-width:320px; margin-bottom:32px;">
+          Interface minimalista para durante o treino.<br>Só o essencial — sem distrações.
+        </p>
+        <button class="btn btn-primary btn-lg" onclick="startFocoMode()" aria-label="Modo Foco">Iniciar Treino em Foco</button>
+        <p style="color:var(--muted); font-size:12px; margin-top:12px;">Selecione um treino para começar</p>
+        <div id="foco-plan-select" style="margin-top:16px; display:flex; flex-direction:column; gap:8px; width:100%; max-width:320px;"></div>
+      </div>
+
+      <div id="foco-active" style="display:none; min-height:100vh; background:var(--darker);">
+        <div style="background:var(--card); border-bottom:1px solid var(--border); padding:16px 24px; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-family:'Bebas Neue'; font-size:20px; letter-spacing:1px;" id="foco-workout-name">TREINO</div>
+            <div style="font-size:12px; color:var(--muted2);" id="foco-timer-label">00:00</div>
+          </div>
+          <button class="btn btn-ghost" style="font-size:12px;" onclick="exitFoco()">✕ Sair do foco</button>
+        </div>
+
+        <div style="padding:24px; max-width:480px; margin:0 auto;">
+          <div style="display:flex; gap:6px; justify-content:center; margin-bottom:24px;" id="foco-ex-dots"></div>
+
+          <div style="text-align:center; margin-bottom:32px;">
+            <div style="font-size:48px; margin-bottom:8px;" id="foco-ex-emoji">💪</div>
+            <div style="font-family:'Bebas Neue'; font-size:36px; letter-spacing:1px; margin-bottom:4px;" id="foco-ex-name">EXERCÍCIO</div>
+            <div style="font-size:14px; color:var(--muted2);" id="foco-ex-meta">3 séries · 8-12 reps</div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:32px;">
+            <div class="card" style="text-align:center; padding:20px;">
+              <div style="font-size:12px; color:var(--muted2); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">PESO</div>
+              <div style="display:flex; align-items:center; justify-content:center; gap:8px;">
+                <button class="num-btn" onclick="focoAdjust('weight',-0.5)" style="border-radius:8px;" aria-label="Diminuir peso">−</button>
+                <div style="font-family:'Bebas Neue'; font-size:40px; color:var(--orange); min-width:60px;" id="foco-weight">20</div>
+                <button class="num-btn" onclick="focoAdjust('weight',0.5)" style="border-radius:8px;" aria-label="Aumentar peso">+</button>
+              </div>
+              <div style="font-size:12px; color:var(--muted2);">kg</div>
+            </div>
+            <div class="card" style="text-align:center; padding:20px;">
+              <div style="font-size:12px; color:var(--muted2); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">REPS</div>
+              <div style="display:flex; align-items:center; justify-content:center; gap:8px;">
+                <button class="num-btn" onclick="focoAdjust('reps',-1)" style="border-radius:8px;" aria-label="Diminuir repetições">−</button>
+                <div style="font-family:'Bebas Neue'; font-size:40px; color:var(--orange); min-width:40px;" id="foco-reps">0</div>
+                <button class="num-btn" onclick="focoAdjust('reps',1)" style="border-radius:8px;" aria-label="Aumentar repetições">+</button>
+              </div>
+              <div style="font-size:12px; color:var(--muted2);">repetições</div>
+            </div>
+          </div>
+
+          <div style="margin-bottom:24px;">
+            <div style="font-size:12px; color:var(--muted2); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; text-align:center;" id="foco-set-label">SÉRIE 1 DE 3</div>
+            <div style="display:flex; gap:8px; justify-content:center;" id="foco-set-dots"></div>
+          </div>
+
+          <button class="btn btn-primary btn-full btn-lg" style="font-size:18px; padding:18px; border-radius:16px;" id="foco-action-btn" onclick="focoNextSet()">
+            ✓ Série concluída
+          </button>
+
+          <button class="btn btn-ghost btn-full" style="margin-top:10px;" onclick="focoNextExercise()">
+            Próximo exercício →
+          </button>
+        </div>
+      </div>
+
+      <div id="foco-finish" style="display:none; min-height:100vh; display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:32px;">
+        <div style="font-size:64px; margin-bottom:16px;">🏆</div>
+        <div style="font-family:'Bebas Neue'; font-size:48px; color:var(--orange); letter-spacing:2px; margin-bottom:8px;">TREINO FEITO!</div>
+        <p style="color:var(--muted2); margin-bottom:32px;" id="foco-summary"></p>
+        <button class="btn btn-primary btn-lg" onclick="focoFinish()">Salvar e voltar</button>
+      </div>
+    </div>
+
+  <!-- ══ VALIDADOR DE ESTÍMULO ══ -->
+  <div id="validador-modal" style="position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:700;display:none;align-items:flex-end;justify-content:center;padding:0;">
+    <div style="background:#0E0E0E;border-radius:24px 24px 0 0;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;padding:24px 20px 40px;">
+      
+      <!-- Header -->
+      <div style="text-align:center;margin-bottom:20px;">
+        <div style="width:40px;height:4px;background:#333;border-radius:4px;margin:0 auto 16px;"></div>
+        <div style="background:rgba(255,92,0,0.1);border:1px solid rgba(255,92,0,0.3);border-radius:100px;padding:4px 14px;font-size:11px;font-weight:700;color:#FF5C00;letter-spacing:1px;display:inline-block;margin-bottom:12px;">🧬 VALIDADOR DE ESTÍMULO</div>
+        <div style="font-size:20px;font-weight:800;color:#F0F0F0;margin-bottom:6px;" id="v-titulo">Como foi o exercício?</div>
+        <div style="font-size:13px;color:#666;line-height:1.5;">O peso só sobe quando o músculo certo trabalha</div>
+      </div>
+
+      <!-- Exercício info -->
+      <div style="background:#1A1A1A;border-radius:14px;padding:14px 16px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-size:11px;color:#666;margin-bottom:2px;">EXERCÍCIO</div>
+          <div style="font-weight:700;color:#FF5C00;font-size:15px;" id="v-exercicio-nome">—</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:11px;color:#666;margin-bottom:2px;">CARGA USADA</div>
+          <div style="font-weight:800;color:#FF5C00;font-size:20px;" id="v-carga-atual">—</div>
+        </div>
+      </div>
+
+      <!-- P1: Onde sentiu -->
+      <div style="margin-bottom:18px;">
+        <div style="font-size:14px;font-weight:700;color:#F0F0F0;margin-bottom:10px;">1. Onde você sentiu mais? <span style="font-size:12px;color:#555;font-weight:400;">(pode marcar mais de um)</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;" id="v-onde">
+          <button class="v-opt" data-group="onde" data-val="alvo" style="flex:1;min-width:120px;" onclick="vSelectMulti(this,'onde')">🎯 Músculo alvo</button>
+          <button class="v-opt" data-group="onde" data-val="adjacente" style="flex:1;min-width:120px;" onclick="vSelectMulti(this,'onde')">↔️ Adjacente</button>
+          <button class="v-opt" data-group="onde" data-val="compensador" style="flex:1;min-width:120px;" onclick="vSelectMulti(this,'onde')">⚠️ Compensador</button>
+          <button class="v-opt" data-group="onde" data-val="lombar" style="flex:1;min-width:120px;" onclick="vSelectMulti(this,'onde')">🔙 Lombar</button>
+        </div>
+      </div>
+
+      <!-- P2: Técnica -->
+      <div style="margin-bottom:18px;">
+        <div style="font-size:14px;font-weight:700;color:#F0F0F0;margin-bottom:10px;">2. Conseguiu manter a técnica?</div>
+        <div style="display:flex;gap:8px;" id="v-tecnica">
+          <button class="v-opt" data-group="tecnica" data-val="sim" style="flex:1;" onclick="vSelectSingle(this,'tecnica')">✅ Sim, todas</button>
+          <button class="v-opt" data-group="tecnica" data-val="parcial" style="flex:1;" onclick="vSelectSingle(this,'tecnica')">⚠️ Parcial</button>
+          <button class="v-opt" data-group="tecnica" data-val="nao" style="flex:1;" onclick="vSelectSingle(this,'tecnica')">❌ Não</button>
+        </div>
+      </div>
+
+      <!-- P3: Última série -->
+      <div style="margin-bottom:18px;">
+        <div style="font-size:14px;font-weight:700;color:#F0F0F0;margin-bottom:10px;">3. Como foi a última série?</div>
+        <div style="display:flex;gap:8px;" id="v-serie">
+          <button class="v-opt" data-group="serie" data-val="facil" style="flex:1;" onclick="vSelectSingle(this,'serie')">😊 Fácil</button>
+          <button class="v-opt" data-group="serie" data-val="dificil" style="flex:1;" onclick="vSelectSingle(this,'serie')">💪 Difícil</button>
+          <button class="v-opt" data-group="serie" data-val="falha" style="flex:1;" onclick="vSelectSingle(this,'serie')">😫 Falha</button>
+        </div>
+      </div>
+
+      <!-- P4: Conexão -->
+      <div style="margin-bottom:24px;">
+        <div style="font-size:14px;font-weight:700;color:#F0F0F0;margin-bottom:10px;">4. Sentiu o músculo trabalhando? <span style="font-size:12px;color:#555;font-weight:400;">(conexão mente-músculo)</span></div>
+        <div style="display:flex;gap:6px;justify-content:space-between;" id="v-conexao">
+          <button class="v-rate" data-val="1" onclick="vSelectRate(this)">1</button>
+          <button class="v-rate" data-val="2" onclick="vSelectRate(this)">2</button>
+          <button class="v-rate" data-val="3" onclick="vSelectRate(this)">3</button>
+          <button class="v-rate" data-val="4" onclick="vSelectRate(this)">4</button>
+          <button class="v-rate" data-val="5" onclick="vSelectRate(this)">5</button>
+          <button class="v-rate" data-val="6" onclick="vSelectRate(this)">6</button>
+          <button class="v-rate" data-val="7" onclick="vSelectRate(this)">7</button>
+          <button class="v-rate" data-val="8" onclick="vSelectRate(this)">8</button>
+          <button class="v-rate" data-val="9" onclick="vSelectRate(this)">9</button>
+          <button class="v-rate" data-val="10" onclick="vSelectRate(this)">10</button>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:4px;">
+          <span style="font-size:10px;color:#555;">Não senti nada</span>
+          <span style="font-size:10px;color:#555;">Senti perfeitamente</span>
+        </div>
+      </div>
+
+      <!-- Botão validar -->
+      <button onclick="validarEstimulo()" style="width:100%;background:#FF5C00;color:white;border:none;border-radius:14px;padding:16px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:12px;">🧬 VALIDAR ESTÍMULO</button>
+
+      <!-- Resultado -->
+      <div id="v-resultado" style="display:none;border-radius:14px;padding:16px;margin-bottom:12px;border-left:4px solid;">
+        <div style="font-size:16px;font-weight:800;margin-bottom:8px;" id="v-res-titulo"></div>
+        <div style="font-size:13px;color:#CCC;line-height:1.6;margin-bottom:14px;" id="v-res-desc"></div>
+        <div style="background:#111;border-radius:10px;padding:12px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div>
+            <div style="font-size:11px;color:#666;">CARGA SUGERIDA</div>
+            <div style="font-size:24px;font-weight:900;" id="v-res-carga"></div>
+          </div>
+          <div style="font-size:28px;" id="v-res-icon"></div>
+        </div>
+        <div style="background:rgba(255,92,0,0.08);border:1px solid rgba(255,92,0,0.2);border-radius:10px;padding:12px;font-size:13px;color:#CCC;line-height:1.6;" id="v-res-ajuste"></div>
+      </div>
+
+      <!-- Pular / Continuar -->
+      <div style="display:flex;gap:10px;">
+        <button onclick="fecharValidador(false)" style="flex:1;background:#1A1A1A;color:#888;border:1px solid #333;border-radius:12px;padding:14px;font-size:13px;font-weight:700;cursor:pointer;">Pular</button>
+        <button id="v-btn-continuar" onclick="fecharValidador(true)" style="flex:2;background:#1A1A1A;color:#666;border:1px solid #333;border-radius:12px;padding:14px;font-size:13px;font-weight:700;cursor:pointer;" disabled>Próximo exercício →</button>
+      </div>
+    </div>
+  </div>
 
   </main>
 
@@ -4170,19 +4446,46 @@ document.getElementById('foco-reps').textContent = focoState.currentReps;
 function focoGoToSet(idx) { focoState.setIdx = idx; focoRender(); }
 
 function focoNextSet() {
-const ex = focoState.exercises[focoState.exIdx];
-ex.sets[focoState.setIdx].weight = focoState.currentWeight;
-ex.sets[focoState.setIdx].reps = focoState.currentReps;
-ex.sets[focoState.setIdx].done = true;
-checkAndShowPR(ex.id, focoState.currentWeight);
-const restSecs = ex.rest || 90;
-startRestTimer(restSecs, ex.name.toUpperCase(), `Série ${focoState.setIdx+1} concluída`);
-focoState.setIdx++;
-if (focoState.setIdx >= ex.sets.length) { focoNextExercise(); return; }
-focoRender();
+  const ex = focoState.exercises[focoState.exIdx];
+  ex.sets[focoState.setIdx].weight = focoState.currentWeight;
+  ex.sets[focoState.setIdx].reps = focoState.currentReps;
+  ex.sets[focoState.setIdx].done = true;
+  checkAndShowPR(ex.id, focoState.currentWeight);
+
+  const serieAtual = focoState.setIdx + 1;
+  const totalSeries = ex.sets.length;
+  const isUltimaSerie = serieAtual >= totalSeries;
+
+  // Abre validador após confirmar a série
+  // No label do botão continuar: última série → "Próximo exercício", senão → "Próxima série"
+  vState.pendingNextEx = isUltimaSerie;
+  vState.pendingNextSet = !isUltimaSerie;
+  vState.serieAtual = serieAtual;
+  vState.totalSeries = totalSeries;
+
+  abrirValidador(
+    ex.name || ex.exercicio || 'Exercício',
+    focoState.currentWeight,
+    serieAtual,
+    totalSeries
+  );
+}
+
+function _focoNextSetReal() {
+  const ex = focoState.exercises[focoState.exIdx];
+  const restSecs = ex.rest || 90;
+  startRestTimer(restSecs, ex.name.toUpperCase(), `Série ${focoState.setIdx+1} concluída`);
+  focoState.setIdx++;
+  if (focoState.setIdx >= ex.sets.length) { _focoNextExerciseReal(); return; }
+  focoRender();
 }
 
 function focoNextExercise() {
+  // Called directly only if bypassing focoNextSet (edge case)
+  _focoNextExerciseReal();
+}
+
+function _focoNextExerciseReal() {
 focoState.exIdx++;
 focoState.setIdx = 0;
 if (focoState.exIdx >= focoState.exercises.length) { focoShowFinish(); return; }
@@ -5881,6 +6184,190 @@ function renderMedidasView() {
   renderHistoricoMedidas();
   const hist = state.medidas || [];
   if (hist.length > 0) atualizarSilhueta(hist[hist.length - 1]);
+}
+
+// ═══════════════════════════════════════
+//  VALIDADOR DE ESTÍMULO
+// ═══════════════════════════════════════
+const vState = {
+  respostas: { onde: [], tecnica: null, serie: null, conexao: null },
+  exNome: '',
+  cargaUsada: 0,
+  validado: false,
+  pendingNextEx: false,
+};
+
+function abrirValidador(exNome, cargaKg, serieAtual, totalSeries) {
+  vState.exNome = exNome;
+  vState.cargaUsada = cargaKg;
+  vState.validado = false;
+  vState.respostas = { onde: [], tecnica: null, serie: null, conexao: null };
+
+  const isUltima = serieAtual >= totalSeries;
+  const labelContinuar = isUltima ? 'Próximo exercício →' : `Próxima série (${serieAtual + 1}/${totalSeries}) →`;
+
+  // Reset UI
+  document.querySelectorAll('.v-opt, .v-rate').forEach(b => b.classList.remove('selected'));
+  document.getElementById('v-resultado').style.display = 'none';
+  const btnC = document.getElementById('v-btn-continuar');
+  btnC.disabled = true;
+  btnC.style.color = '#666';
+  btnC.style.borderColor = '#333';
+  btnC.textContent = labelContinuar;
+  document.getElementById('v-exercicio-nome').textContent = exNome;
+  document.getElementById('v-carga-atual').textContent = cargaKg + ' kg';
+
+  // Serie badge
+  const serieLabel = serieAtual ? `Série ${serieAtual} de ${totalSeries}` : exNome;
+  document.getElementById('v-titulo').textContent = serieLabel;
+
+  document.getElementById('validador-modal').style.display = 'flex';
+}
+
+function fecharValidador(continuar) {
+  document.getElementById('validador-modal').style.display = 'none';
+  // Always proceed — pular or continuar both move forward
+  if (vState.pendingNextEx) {
+    vState.pendingNextEx = false;
+    _focoNextExerciseReal();
+  } else if (vState.pendingNextSet) {
+    vState.pendingNextSet = false;
+    _focoNextSetReal();
+  }
+}
+
+function vSelectMulti(btn, group) {
+  btn.classList.toggle('selected');
+  const val = btn.dataset.val;
+  if (btn.classList.contains('selected')) {
+    if (!vState.respostas.onde.includes(val)) vState.respostas.onde.push(val);
+  } else {
+    vState.respostas.onde = vState.respostas.onde.filter(v => v !== val);
+  }
+}
+
+function vSelectSingle(btn, group) {
+  const container = btn.closest('[id^="v-"]') || btn.parentElement;
+  container.querySelectorAll('.v-opt').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  vState.respostas[group] = btn.dataset.val;
+}
+
+function vSelectRate(btn) {
+  document.querySelectorAll('.v-rate').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  vState.respostas.conexao = parseInt(btn.dataset.val);
+}
+
+function validarEstimulo() {
+  const r = vState.respostas;
+  if (!r.onde.length || !r.tecnica || !r.serie || !r.conexao) {
+    showNotif('⚠️', 'Responda tudo', 'Preencha todas as perguntas para validar', 'warning');
+    return;
+  }
+
+  const carga = vState.cargaUsada;
+  const sentiuAlvo   = r.onde.includes('alvo');
+  const temCompensador = r.onde.includes('compensador') || r.onde.includes('lombar');
+  const conexaoBoa   = r.conexao >= 7;
+  const tecnicaBoa   = r.tecnica === 'sim';
+  const tecnicaMedia = r.tecnica === 'parcial';
+
+  let res = {};
+
+  if (!sentiuAlvo || temCompensador) {
+    res = {
+      tipo: 'invalido',
+      titulo: '🚨 Músculo compensando',
+      desc: 'Você não sentiu o músculo principal ou outro está dominando. A carga não deve subir.',
+      carga: Math.round(carga * 0.95),
+      cor: '#e57373',
+      icon: '📉',
+      ajuste: 'Reduza a carga em 5% e adicione pré-ativação antes do próximo treino. Foque na contração do músculo principal antes de cada rep.'
+    };
+  } else if (!tecnicaBoa || r.serie === 'falha') {
+    res = {
+      tipo: 'aviso',
+      titulo: '⚠️ Técnica comprometida',
+      desc: 'O músculo certo trabalhou, mas a execução falhou. Mantenha a carga e foque na qualidade.',
+      carga: Math.round(carga * 0.9),
+      cor: '#FFB300',
+      icon: '📊',
+      ajuste: 'Reduza 10% e priorize amplitude completa. Grave um vídeo lateral para verificar o padrão de movimento.'
+    };
+  } else if (sentiuAlvo && tecnicaBoa && r.serie === 'facil' && conexaoBoa) {
+    const nova = Math.round(carga * 1.05);
+    res = {
+      tipo: 'valido',
+      titulo: '✅ Estímulo perfeito!',
+      desc: 'Músculo alvo dominante, técnica mantida, conexão alta. Você está pronta para progredir.',
+      carga: nova,
+      cor: '#4CAF50',
+      icon: '📈',
+      ajuste: `Aumente para ${nova}kg no próximo treino. Continue com a mesma execução — ela está funcionando.`
+    };
+  } else if (sentiuAlvo && (tecnicaBoa || tecnicaMedia) && r.serie === 'dificil' && conexaoBoa) {
+    res = {
+      tipo: 'aviso',
+      titulo: '💪 No limite certo',
+      desc: 'Estímulo válido, mas você está no limiar. Mantenha a carga mais um treino.',
+      carga: carga,
+      cor: '#FFB300',
+      icon: '📊',
+      ajuste: 'Mantenha os ' + carga + 'kg. Se repetir esse resultado, aí progride. Consistência primeiro.'
+    };
+  } else if (r.conexao < 5) {
+    res = {
+      tipo: 'invalido',
+      titulo: '🔌 Conexão fraca',
+      desc: 'Você não sentiu o músculo trabalhando. Antes de subir a carga, é preciso sentir.',
+      carga: carga,
+      cor: '#e57373',
+      icon: '📊',
+      ajuste: 'Tente o "método de ativação": 1 série leve (50% da carga) focando só em sentir o músculo. Depois execute normalmente.'
+    };
+  } else {
+    res = {
+      tipo: 'aviso',
+      titulo: '🔍 Estímulo ok',
+      desc: 'Resultado aceitável. Repita com a mesma carga e observe se melhora.',
+      carga: carga,
+      cor: '#FFB300',
+      icon: '📊',
+      ajuste: 'Mantenha a carga. Concentre-se em melhorar a conexão mente-músculo.'
+    };
+  }
+
+  // Salvar no histórico de validações
+  if (!state.validacoes) state.validacoes = [];
+  state.validacoes.push({
+    data: Date.now(),
+    exercicio: vState.exNome,
+    cargaUsada: carga,
+    cargaSugerida: res.carga,
+    tipo: res.tipo,
+    respostas: { ...r },
+  });
+  save();
+
+  // Mostrar resultado
+  const el = document.getElementById('v-resultado');
+  el.style.display = 'block';
+  el.style.borderLeftColor = res.cor;
+  document.getElementById('v-res-titulo').style.color = res.cor;
+  document.getElementById('v-res-titulo').textContent = res.titulo;
+  document.getElementById('v-res-desc').textContent = res.desc;
+  document.getElementById('v-res-carga').style.color = res.cor;
+  document.getElementById('v-res-carga').textContent = res.carga + ' kg';
+  document.getElementById('v-res-icon').textContent = res.icon;
+  document.getElementById('v-res-ajuste').textContent = res.ajuste;
+
+  // Habilitar botão continuar
+  const btnC = document.getElementById('v-btn-continuar');
+  btnC.disabled = false;
+  btnC.style.color = '#F0F0F0';
+  btnC.style.borderColor = '#FF5C00';
+  vState.validado = true;
 }
 
 try {
