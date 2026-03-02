@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>PROGRESSAR — Progressão de Carga Inteligente</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 
@@ -2559,7 +2559,7 @@
   </main>
 
   <!-- ══ PDF LOCK MODAL ══ -->
-  <div class="checkin-overlay" id="pdf-lock-modal" style="align-items:center; padding:20px; z-index:550;">
+  <div id="pdf-lock-modal" style="position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:550; display:none; align-items:center; justify-content:center; padding:20px;">
     <div style="background:var(--card); border-radius:24px; padding:24px 20px; width:100%; max-width:400px; border:1px solid rgba(255,92,0,0.3); position:relative; text-align:center;">
       <button onclick="fecharModalPDFBloqueado()" style="position:absolute; top:14px; right:14px; background:var(--card2); border:none; color:var(--muted2); width:32px; height:32px; border-radius:50%; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1;">✕</button>
       <div style="font-size:42px; margin-bottom:12px;">🔒</div>
@@ -2581,7 +2581,7 @@
   </div>
 
   <!-- ══ TUTORIAL INICIAL ══ -->
-  <div class="checkin-overlay" id="tutorial-overlay" style="align-items:center; padding:20px; z-index:600;">
+  <div id="tutorial-overlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:600; display:none; align-items:center; justify-content:center; padding:20px;">
     <div style="background:var(--card); border-radius:24px; padding:24px 20px; width:100%; max-width:420px; border:1px solid var(--border); position:relative;">
       <button onclick="fecharTutorial()" style="position:absolute; top:14px; right:14px; background:var(--card2); border:none; color:var(--muted2); width:32px; height:32px; border-radius:50%; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; line-height:1;">✕</button>
       <div style="text-align:center; margin-bottom:20px;">
@@ -6774,6 +6774,28 @@ c.contador = fases[c.fase];
 atualizarDisplayCadencia(exIdx);
 }
 
+// Speech synthesis for cadência
+let cadenciaSomAtivo = true;
+
+function toggleCadenciaSom(exIdx) {
+  cadenciaSomAtivo = !cadenciaSomAtivo;
+  const btn = document.getElementById(`cadencia-som-${exIdx}`);
+  if (btn) btn.textContent = cadenciaSomAtivo ? '🔊' : '🔇';
+  if (!cadenciaSomAtivo && window.speechSynthesis) window.speechSynthesis.cancel();
+}
+
+function falarFase(texto) {
+  if (!cadenciaSomAtivo) return;
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(texto);
+  u.lang = 'pt-BR';
+  u.rate = 0.9;
+  u.pitch = 1.1;
+  u.volume = 1;
+  window.speechSynthesis.speak(u);
+}
+
 function atualizarDisplayCadencia(exIdx) {
 const c = getCadencia(exIdx);
 const cfg = CADENCIA_PRESETS[c.preset];
@@ -7021,12 +7043,12 @@ setTimeout(() => container.remove(), 4000);
 function abrirTutorial() {
 if (state.gamification?.tutorialVisto) return;
 const overlay = document.getElementById('tutorial-overlay');
-if (overlay) overlay.classList.add('open');
+if (overlay) overlay.style.display = 'flex';
 }
 
 function fecharTutorial() {
 const overlay = document.getElementById('tutorial-overlay');
-if (overlay) overlay.classList.remove('open');
+if (overlay) overlay.style.display = 'none';
 if (!state.gamification) state.gamification = {};
 state.gamification.tutorialVisto = true;
 saveState();
