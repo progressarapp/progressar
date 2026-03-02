@@ -5301,6 +5301,7 @@ iniciarCadencia(exIdx);
 async function iniciarCadencia(exIdx) {
 await resumeAudio();
 beepCadencia('completo');
+setTimeout(() => falarFase('Desça devagar'), 300);
 const c = getCadencia(exIdx);
 const ex = state.activeWorkout?.exercises[exIdx];
 if (ex) {
@@ -5326,21 +5327,26 @@ function tickCadencia(exIdx) {
 const c = getCadencia(exIdx);
 const cfg = CADENCIA_PRESETS[c.preset];
 const fases = [cfg.desce, cfg.pausa, cfg.sobe];
-const nomes = ['DESCE 🔽', cfg.pausa === 0 ? 'SOBE 🔼' : 'PAUSA ⏸️', 'SOBE 🔼'];
 c.contador--;
 if (c.contador <= 0) {
-c.fase++;
-if (c.fase === 1 && cfg.pausa === 0) c.fase = 2;
-if (c.fase > 2) {
-c.rep++;
-if (c.rep > c.targetReps) {
-pararCadencia(exIdx);
-showNotif('🎉', 'Série completa!', `${c.targetReps} reps com cadência perfeita!`, 'success');
-return;
-}
-c.fase = 0;
-}
-c.contador = fases[c.fase];
+  c.fase++;
+  if (c.fase === 1 && cfg.pausa === 0) c.fase = 2;
+  if (c.fase > 2) {
+    c.rep++;
+    if (c.rep > c.targetReps) {
+      falarFase('Série completa! Descanse.');
+      pararCadencia(exIdx);
+      showNotif('🎉', 'Série completa!', `${c.targetReps} reps com cadência perfeita!`, 'success');
+      return;
+    }
+    c.fase = 0;
+    falarFase('Desça devagar');
+  } else {
+    // Beep ao mudar de fase
+    const frases = ['Desça devagar', 'Pausa', 'Sobe'];
+    falarFase(frases[c.fase] || 'Desça devagar');
+  }
+  c.contador = fases[c.fase];
 }
 atualizarDisplayCadencia(exIdx);
 }
