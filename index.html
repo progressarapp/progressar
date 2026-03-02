@@ -2068,6 +2068,9 @@
     <button class="nav-btn" id="nav-biblioteca" onclick="switchView('biblioteca')" aria-label="Biblioteca">
       🧬 <span class="tooltip">Biblioteca</span>
     </button>
+    <button class="nav-btn" id="nav-medidas" onclick="switchView('medidas')" aria-label="Medidas">
+      📏 <span class="tooltip">Medidas</span>
+    </button>
     <div style="flex:1;"></div>
     <button class="nav-btn" id="nav-ebooks" onclick="switchView('ebooks')" aria-label="Ebooks">
       📚 <span class="tooltip">Ebooks</span>
@@ -2556,6 +2559,67 @@
       </div>
     </div>
 
+  <!-- ═══════════ MEDIDAS VIEW ═══════════ -->
+    <div class="view" id="view-medidas">
+      <div class="page-header">
+        <div>
+          <div class="page-title">📏 Minhas Medidas</div>
+          <div class="page-subtitle">Silhueta atualizada com seus números</div>
+        </div>
+        <button class="btn btn-primary" onclick="salvarMedidas()" style="padding:10px 18px;">💾 Salvar</button>
+      </div>
+
+      <!-- SILHUETA SVG -->
+      <div style="background:var(--card2); border:1px solid var(--border2); border-radius:18px; padding:20px; margin-bottom:16px; text-align:center;">
+        <div style="font-size:11px; color:var(--muted2); margin-bottom:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase;">Sua silhueta atual</div>
+        <svg id="silhueta-svg" viewBox="0 0 200 380" width="140" height="266" style="display:block; margin:0 auto; overflow:visible;">
+          <ellipse id="s-cabeca" cx="100" cy="36" rx="22" ry="25" fill="#FF5C00" opacity="0.9"/>
+          <rect id="s-pescoco" x="91" y="59" width="18" height="14" rx="4" fill="#FF5C00" opacity="0.75"/>
+          <path id="s-busto" d="M58,74 Q100,68 142,74 L138,112 Q100,106 62,112 Z" fill="#FF5C00" opacity="0.8"/>
+          <path id="s-cintura" d="M64,111 Q100,105 136,111 L132,138 Q100,133 68,138 Z" fill="#FF5C00" opacity="0.85"/>
+          <path id="s-quadril" d="M62,137 Q100,131 138,137 L144,172 Q100,168 56,172 Z" fill="#FF5C00" opacity="0.8"/>
+          <line id="s-braco-e" x1="62" y1="76" x2="40" y2="148" stroke="#FF5C00" stroke-width="18" stroke-linecap="round" opacity="0.7"/>
+          <line id="s-braco-d" x1="138" y1="76" x2="160" y2="148" stroke="#FF5C00" stroke-width="18" stroke-linecap="round" opacity="0.7"/>
+          <line id="s-coxa-e" x1="82" y1="172" x2="76" y2="258" stroke="#FF5C00" stroke-width="28" stroke-linecap="round" opacity="0.78"/>
+          <line id="s-coxa-d" x1="118" y1="172" x2="124" y2="258" stroke="#FF5C00" stroke-width="28" stroke-linecap="round" opacity="0.78"/>
+          <line id="s-perna-e" x1="75" y1="257" x2="72" y2="332" stroke="#FF5C00" stroke-width="18" stroke-linecap="round" opacity="0.68"/>
+          <line id="s-perna-d" x1="125" y1="257" x2="128" y2="332" stroke="#FF5C00" stroke-width="18" stroke-linecap="round" opacity="0.68"/>
+          <ellipse cx="72" cy="340" rx="16" ry="7" fill="#FF5C00" opacity="0.6"/>
+          <ellipse cx="128" cy="340" rx="16" ry="7" fill="#FF5C00" opacity="0.6"/>
+        </svg>
+        <div id="silhueta-delta" style="margin-top:10px; font-size:12px; color:var(--muted2); min-height:20px;"></div>
+      </div>
+
+      <!-- INPUTS -->
+      <div style="background:var(--card2); border:1px solid var(--border2); border-radius:18px; padding:20px; margin-bottom:16px;">
+        <div style="font-size:13px; font-weight:700; color:var(--text); margin-bottom:16px;">📐 Medidas em cm</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div><label style="font-size:11px;color:var(--muted2);font-weight:700;display:block;margin-bottom:4px;text-transform:uppercase;">Busto</label>
+            <input type="number" id="m-busto" placeholder="92" inputmode="decimal" oninput="previewSilhueta()" style="width:100%;padding:10px 12px;background:var(--card);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-size:16px;box-sizing:border-box;"></div>
+          <div><label style="font-size:11px;color:var(--muted2);font-weight:700;display:block;margin-bottom:4px;text-transform:uppercase;">Cintura</label>
+            <input type="number" id="m-cintura" placeholder="70" inputmode="decimal" oninput="previewSilhueta()" style="width:100%;padding:10px 12px;background:var(--card);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-size:16px;box-sizing:border-box;"></div>
+          <div><label style="font-size:11px;color:var(--muted2);font-weight:700;display:block;margin-bottom:4px;text-transform:uppercase;">Quadril</label>
+            <input type="number" id="m-quadril" placeholder="98" inputmode="decimal" oninput="previewSilhueta()" style="width:100%;padding:10px 12px;background:var(--card);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-size:16px;box-sizing:border-box;"></div>
+          <div><label style="font-size:11px;color:var(--muted2);font-weight:700;display:block;margin-bottom:4px;text-transform:uppercase;">Coxa</label>
+            <input type="number" id="m-coxa" placeholder="58" inputmode="decimal" oninput="previewSilhueta()" style="width:100%;padding:10px 12px;background:var(--card);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-size:16px;box-sizing:border-box;"></div>
+          <div><label style="font-size:11px;color:var(--muted2);font-weight:700;display:block;margin-bottom:4px;text-transform:uppercase;">Braço</label>
+            <input type="number" id="m-braco" placeholder="30" inputmode="decimal" oninput="previewSilhueta()" style="width:100%;padding:10px 12px;background:var(--card);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-size:16px;box-sizing:border-box;"></div>
+          <div><label style="font-size:11px;color:var(--muted2);font-weight:700;display:block;margin-bottom:4px;text-transform:uppercase;">Panturrilha</label>
+            <input type="number" id="m-panturrilha" placeholder="36" inputmode="decimal" oninput="previewSilhueta()" style="width:100%;padding:10px 12px;background:var(--card);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-size:16px;box-sizing:border-box;"></div>
+        </div>
+        <div style="margin-top:12px;">
+          <label style="font-size:11px;color:var(--muted2);font-weight:700;display:block;margin-bottom:4px;text-transform:uppercase;">Peso (kg)</label>
+          <input type="number" id="m-peso" placeholder="68.5" inputmode="decimal" step="0.1" oninput="previewSilhueta()" style="width:100%;padding:10px 12px;background:var(--card);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-size:16px;box-sizing:border-box;">
+        </div>
+      </div>
+
+      <!-- HISTÓRICO -->
+      <div style="background:var(--card2); border:1px solid var(--border2); border-radius:18px; padding:20px; margin-bottom:80px;">
+        <div style="font-size:13px; font-weight:700; color:var(--text); margin-bottom:16px;">📊 Histórico de evolução</div>
+        <div id="historico-medidas"><div style="color:var(--muted2);font-size:13px;text-align:center;padding:20px;">Nenhuma medida salva ainda</div></div>
+      </div>
+    </div><!-- end view-medidas -->
+
   </main>
 
   <!-- ══ PDF LOCK MODAL ══ -->
@@ -2767,6 +2831,7 @@ document.getElementById(`view-${view}`).classList.add('active');
 const nb = document.getElementById(`nav-${view}`);
 if (nb) nb.classList.add('active');
 if (view === 'perfil') updateProfile();
+  if (view === 'medidas') renderMedidasView();
 if (view === 'cardio') renderCardioView();
 if (view === 'biblioteca') renderBiblioteca();
 if (view === 'dashboard') { updateDashboard(); verificarCheckinHoje(); }
@@ -6776,6 +6841,16 @@ atualizarDisplayCadencia(exIdx);
 
 // Speech synthesis for cadência
 let cadenciaSomAtivo = true;
+let speechUnlocked = false;
+
+// Unlock speech synthesis on first touch (required by mobile browsers)
+document.addEventListener('touchstart', function unlockSpeech() {
+  if (speechUnlocked || !window.speechSynthesis) return;
+  const u = new SpeechSynthesisUtterance('');
+  window.speechSynthesis.speak(u);
+  speechUnlocked = true;
+  document.removeEventListener('touchstart', unlockSpeech);
+}, { once: true });
 
 function toggleCadenciaSom(exIdx) {
   cadenciaSomAtivo = !cadenciaSomAtivo;
@@ -6787,13 +6862,19 @@ function toggleCadenciaSom(exIdx) {
 function falarFase(texto) {
   if (!cadenciaSomAtivo) return;
   if (!window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(texto);
-  u.lang = 'pt-BR';
-  u.rate = 0.9;
-  u.pitch = 1.1;
-  u.volume = 1;
-  window.speechSynthesis.speak(u);
+  try {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(texto);
+    u.lang = 'pt-BR';
+    u.rate = 0.85;
+    u.pitch = 1.1;
+    u.volume = 1;
+    // Força voz pt-BR se disponível
+    const voices = window.speechSynthesis.getVoices();
+    const ptVoz = voices.find(v => v.lang.startsWith('pt'));
+    if (ptVoz) u.voice = ptVoz;
+    window.speechSynthesis.speak(u);
+  } catch(e) { console.warn('TTS erro:', e); }
 }
 
 function atualizarDisplayCadencia(exIdx) {
@@ -7131,6 +7212,136 @@ if (i === 0) dispararConfetti(80);
 }, i * 1500);
 });
 return novos;
+}
+
+// ═══════════════════════════════════════
+//  MEDIDAS ANTROPOMÉTRICAS + SILHUETA
+// ═══════════════════════════════════════
+const MEDIDAS_BASE = { busto: 90, cintura: 70, quadril: 96, coxa: 56, braco: 28, panturrilha: 35 };
+
+function getMedidasForm() {
+  return {
+    busto: parseFloat(document.getElementById('m-busto')?.value) || 0,
+    cintura: parseFloat(document.getElementById('m-cintura')?.value) || 0,
+    quadril: parseFloat(document.getElementById('m-quadril')?.value) || 0,
+    coxa: parseFloat(document.getElementById('m-coxa')?.value) || 0,
+    braco: parseFloat(document.getElementById('m-braco')?.value) || 0,
+    panturrilha: parseFloat(document.getElementById('m-panturrilha')?.value) || 0,
+    peso: parseFloat(document.getElementById('m-peso')?.value) || 0,
+  };
+}
+
+function previewSilhueta() {
+  atualizarSilhueta(getMedidasForm());
+}
+
+function atualizarSilhueta(m) {
+  function esc(val, base) { return !val || val <= 0 ? 1 : Math.max(0.65, Math.min(1.45, val / base)); }
+  const cx = 100;
+  const eBusto   = esc(m.busto, MEDIDAS_BASE.busto);
+  const eCintura = esc(m.cintura, MEDIDAS_BASE.cintura);
+  const eQuadril = esc(m.quadril, MEDIDAS_BASE.quadril);
+  const eCoxa    = esc(m.coxa, MEDIDAS_BASE.coxa);
+  const eBraco   = esc(m.braco, MEDIDAS_BASE.braco);
+
+  const bw = 42 * eBusto;
+  const el_busto = document.getElementById('s-busto');
+  if (el_busto) el_busto.setAttribute('d', `M${cx-bw},74 Q${cx},68 ${cx+bw},74 L${cx+bw-4},112 Q${cx},106 ${cx-bw+4},112 Z`);
+
+  const cw = 34 * eCintura;
+  const el_cin = document.getElementById('s-cintura');
+  if (el_cin) el_cin.setAttribute('d', `M${cx-cw},111 Q${cx},105 ${cx+cw},111 L${cx+cw-4},138 Q${cx},133 ${cx-cw+4},138 Z`);
+
+  const qw = 44 * eQuadril;
+  const el_qua = document.getElementById('s-quadril');
+  if (el_qua) el_qua.setAttribute('d', `M${cx-qw+4},137 Q${cx},131 ${cx+qw-4},137 L${cx+qw},172 Q${cx},168 ${cx-qw},172 Z`);
+
+  const bwBr = Math.round(18 * eBraco);
+  ['s-braco-e','s-braco-d'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.setAttribute('stroke-width', bwBr);
+  });
+
+  const bwCo = Math.round(28 * eCoxa);
+  ['s-coxa-e','s-coxa-d'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.setAttribute('stroke-width', bwCo);
+  });
+
+  // Delta vs last saved
+  const hist = state.medidas || [];
+  const delta = document.getElementById('silhueta-delta');
+  if (delta) {
+    if (hist.length > 0) {
+      const ant = hist[hist.length - 1];
+      const parts = [];
+      if (m.cintura && ant.cintura) { const d = (m.cintura - ant.cintura).toFixed(1); parts.push(`<span style="color:${d<0?'#4CAF50':'#e57373'};font-weight:700;">Cintura ${d>0?'+':''}${d}cm</span>`); }
+      if (m.quadril && ant.quadril) { const d = (m.quadril - ant.quadril).toFixed(1); parts.push(`<span style="color:${d<0?'#4CAF50':'#e57373'};font-weight:700;">Quadril ${d>0?'+':''}${d}cm</span>`); }
+      if (m.peso && ant.peso) { const d = (m.peso - ant.peso).toFixed(1); parts.push(`<span style="color:${d<0?'#4CAF50':'#e57373'};font-weight:700;">${d>0?'+':''}${d}kg</span>`); }
+      delta.innerHTML = parts.join(' &nbsp; ') || '';
+    } else {
+      delta.textContent = 'Salve sua primeira medida para ver a evolução';
+    }
+  }
+}
+
+function salvarMedidas() {
+  const m = getMedidasForm();
+  if (Object.values(m).filter(v => v > 0).length === 0) {
+    showNotif('⚠️', 'Atenção', 'Preencha pelo menos uma medida', 'warning');
+    return;
+  }
+  if (!state.medidas) state.medidas = [];
+  m.data = Date.now();
+  state.medidas.push(m);
+  save();
+  renderHistoricoMedidas();
+  atualizarSilhueta(m);
+  showNotif('📏', 'Medidas salvas!', 'Silhueta atualizada', 'success');
+  ['m-busto','m-cintura','m-quadril','m-coxa','m-braco','m-panturrilha','m-peso'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+}
+
+function renderHistoricoMedidas() {
+  const el = document.getElementById('historico-medidas');
+  if (!el) return;
+  const hist = state.medidas || [];
+  if (hist.length === 0) {
+    el.innerHTML = '<div style="color:var(--muted2);font-size:13px;text-align:center;padding:20px;">Nenhuma medida salva ainda</div>';
+    return;
+  }
+  el.innerHTML = [...hist].reverse().slice(0, 8).map((m, i) => {
+    const data = new Date(m.data).toLocaleDateString('pt-BR');
+    const campos = [
+      m.busto && `Busto ${m.busto}cm`,
+      m.cintura && `Cintura ${m.cintura}cm`,
+      m.quadril && `Quadril ${m.quadril}cm`,
+      m.coxa && `Coxa ${m.coxa}cm`,
+      m.braco && `Braço ${m.braco}cm`,
+      m.peso && `${m.peso}kg`,
+    ].filter(Boolean).join(' · ');
+
+    const idx = hist.length - 1 - i;
+    let delta = '';
+    if (idx > 0) {
+      const prev = hist[idx - 1];
+      if (m.cintura && prev.cintura) { const d = (m.cintura-prev.cintura).toFixed(1); delta += `<span style="color:${d<0?'#4CAF50':'#e57373'};font-size:11px;font-weight:700;margin-left:6px;">Cin ${d>0?'+':''}${d}</span>`; }
+      if (m.quadril && prev.quadril) { const d = (m.quadril-prev.quadril).toFixed(1); delta += `<span style="color:${d<0?'#4CAF50':'#e57373'};font-size:11px;font-weight:700;margin-left:6px;">Qua ${d>0?'+':''}${d}</span>`; }
+      if (m.peso && prev.peso) { const d = (m.peso-prev.peso).toFixed(1); delta += `<span style="color:${d<0?'#4CAF50':'#e57373'};font-size:11px;font-weight:700;margin-left:6px;">${d>0?'+':''}${d}kg</span>`; }
+    }
+    return `<div style="padding:12px 0;border-bottom:1px solid var(--border);">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+        <span style="font-size:12px;font-weight:700;color:var(--orange);">${data}</span>
+        <span>${delta}</span>
+      </div>
+      <div style="font-size:12px;color:var(--muted2);">${campos}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderMedidasView() {
+  renderHistoricoMedidas();
+  const hist = state.medidas || [];
+  if (hist.length > 0) atualizarSilhueta(hist[hist.length - 1]);
 }
 
 try {
