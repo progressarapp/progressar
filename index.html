@@ -689,6 +689,79 @@
   .wb-ex-check { width:20px; height:20px; border-radius:6px; border:2px solid var(--border2); display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0; transition:all 0.15s; }
   .wb-ex-row.selected .wb-ex-check { background:var(--orange); border-color:var(--orange); color:white; }
 
+  @keyframes toastIn {
+    from { opacity:0; transform:translateX(-50%) translateY(-12px); }
+    to   { opacity:1; transform:translateX(-50%) translateY(0); }
+  }
+  @keyframes toastIn {
+    from { opacity:0; transform:translateX(-50%) translateY(-12px); }
+    to   { opacity:1; transform:translateX(-50%) translateY(0); }
+  }
+  /* ── TIP TOAST ── */
+  .tip-toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #1E1E1E;
+    border: 1px solid var(--orange-mid);
+    border-radius: 14px;
+    padding: 12px 16px;
+    max-width: 340px;
+    width: calc(100% - 40px);
+    z-index: 500;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none;
+  }
+  .tip-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  .tip-toast .tip-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .tip-toast .tip-text { font-size: 13px; color: var(--text); line-height: 1.5; flex: 1; }
+  .tip-toast .tip-close {
+    font-size: 16px; color: var(--muted2); cursor: pointer;
+    pointer-events: all; padding: 0 4px; flex-shrink: 0;
+  }
+
+  /* ── CRONÔMETRO DE EXECUÇÃO ── */
+  .exec-timer {
+    background: var(--card);
+    border: 2px solid var(--orange);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    text-align: center;
+    display: none;
+  }
+  .exec-timer.active { display: block; }
+  .exec-timer-label { font-size: 11px; color: var(--muted2); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
+  .exec-timer-num { font-family: 'DM Mono', monospace; font-size: 52px; font-weight: 900; color: var(--orange); line-height: 1; }
+  .exec-timer-num.ok     { color: #4CAF50; }
+  .exec-timer-num.fast   { color: #FF5C00; }
+  .exec-timer-sub { font-size: 12px; color: var(--muted2); margin-top: 6px; }
+  .exec-timer-bar {
+    height: 4px; border-radius: 4px; background: var(--border);
+    margin-top: 10px; overflow: hidden;
+  }
+  .exec-timer-bar-fill {
+    height: 100%; background: var(--orange);
+    transition: width 1s linear; border-radius: 4px;
+  }
+
+  /* ── SUGESTÃO DE CARGA NA SÉRIE ── */
+  .set-suggestion {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: rgba(76,175,80,0.12); border: 1px solid rgba(76,175,80,0.4);
+    border-radius: 6px; padding: 2px 6px;
+    font-size: 10px; font-weight: 700; color: #4CAF50;
+    margin-left: 6px; vertical-align: middle;
+  }
+
   /* ── VALIDADOR DE ESTÍMULO ── */
   .v-opt {
     padding: 10px 8px;
@@ -1371,36 +1444,7 @@
 
 <!-- BOTÃO FLUTUANTE APOIAR -->
 <div id="fab-wrapper" style="position:fixed; bottom:72px; right:16px; z-index:900; display:flex; align-items:center; gap:6px;">
-  <button onclick="document.getElementById('fab-wrapper').style.display='none'"
-    style="background:rgba(0,0,0,0.6); border:1px solid var(--border2); color:var(--muted2); border-radius:99px; width:24px; height:24px; cursor:pointer; font-size:11px; display:flex; align-items:center; justify-content:center; padding:0;" aria-label="Fechar">✕</button>
-  <a id="fab-support" href="https://wa.me/?text=Quero%20apoiar%20o%20PROGRESSAR!" target="_blank"
-     style="background:var(--orange); color:white; border-radius:99px; padding:11px 16px; font-family:'DM Sans',sans-serif; font-size:12px; font-weight:700; text-decoration:none; display:flex; align-items:center; gap:6px; box-shadow:0 4px 20px rgba(255,92,0,0.4); white-space:nowrap;">
-    💚 Apoiar o Projeto
-  </a>
-</div>
-
-<!-- MODAL REST TIMER -->
-<div class="modal-overlay" id="rest-modal" style="align-items:flex-end; padding-bottom:0;">
-  <div style="background:var(--card); border:1px solid var(--border2); border-radius:24px 24px 0 0; padding:32px 28px 36px; width:100%; max-width:480px; text-align:center; animation:slideUp 0.3s ease;">
-    <div style="width:48px; height:4px; background:var(--border2); border-radius:99px; margin:0 auto 24px;"></div>
-    <div style="font-size:12px; color:var(--muted2); text-transform:uppercase; letter-spacing:2px; margin-bottom:4px;" id="rest-ex-name">DESCANSO</div>
-    <div style="font-size:14px; color:var(--muted2); margin-bottom:20px;" id="rest-serie-info">Próxima série em breve</div>
-
-    <div style="position:relative; width:160px; height:160px; margin:0 auto 24px;">
-      <svg width="160" height="160" viewBox="0 0 160 160" style="transform:rotate(-90deg);">
-        <circle cx="80" cy="80" r="68" fill="none" stroke="var(--border2)" stroke-width="8"/>
-        <circle cx="80" cy="80" r="68" fill="none" stroke="var(--orange)" stroke-width="8"
-          stroke-dasharray="427" id="rest-ring" stroke-dashoffset="0" stroke-linecap="round"
-          style="transition:stroke-dashoffset 1s linear;"/>
-      </svg>
-      <div style="position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;">
-        <div class="timer-display" id="timer-display" style="font-size:52px;">01:30</div>
-        <div style="font-size:11px; color:var(--muted2); text-transform:uppercase; letter-spacing:1px;">restando</div>
-      </div>
-    </div>
-
-    <div style="display:flex; gap:6px; justify-content:center; margin-bottom:20px;" id="rest-presets">
-      <button class="rest-preset-btn" onclick="setRestTimer(45)">45s</button>
+  
       <button class="rest-preset-btn" onclick="setRestTimer(60)">1min</button>
       <button class="rest-preset-btn active" onclick="setRestTimer(90)" id="preset-active">1:30</button>
       <button class="rest-preset-btn" onclick="setRestTimer(120)">2min</button>
@@ -2380,6 +2424,22 @@
 
     <!-- FOCO VIEW -->
     <div class="view" id="view-foco">
+      <!-- RESUME BANNER -->
+      <div id="foco-resume-banner" style="display:none;background:#1A1A1A;border:1px solid #FF5C00;border-radius:16px;padding:16px;margin-bottom:16px;gap:12px;align-items:center;flex-direction:column;">
+        <div style="display:flex;align-items:center;gap:10px;width:100%;">
+          <div style="font-size:28px;">🔄</div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:800;color:#FF5C00;margin-bottom:2px;">Treino interrompido encontrado</div>
+            <div style="font-size:13px;font-weight:700;color:#F0F0F0;" id="foco-resume-plan"></div>
+            <div style="font-size:12px;color:#888;" id="foco-resume-info"></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;width:100%;">
+          <button onclick="descartarFocoSession()" style="flex:1;padding:10px;background:transparent;border:1px solid #333;border-radius:10px;color:#888;font-size:13px;font-weight:600;cursor:pointer;">Descartar</button>
+          <button onclick="resumeFocoSession()" style="flex:2;padding:10px;background:#FF5C00;border:none;border-radius:10px;color:white;font-size:13px;font-weight:800;cursor:pointer;">↩ Continuar treino</button>
+        </div>
+      </div>
+
       <div id="foco-idle" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; text-align:center; padding:32px;">
         <div style="font-size:64px; margin-bottom:16px;">🎯</div>
         <div style="font-family:'Bebas Neue'; font-size:40px; letter-spacing:2px; margin-bottom:8px;">MODO FOCO</div>
@@ -2742,7 +2802,7 @@ document.getElementById(`view-${view}`).classList.add('active');
 const nb = document.getElementById(`nav-${view}`);
 if (nb) nb.classList.add('active');
 if (view === 'perfil') updateProfile();
-  if (view === 'medidas') renderMedidasView();
+  if (view === 'foco') checkFocoResume();
 if (view === 'cardio') renderCardioView();
 if (view === 'biblioteca') renderBiblioteca();
 if (view === 'dashboard') { updateDashboard(); verificarCheckinHoje(); }
@@ -3550,6 +3610,15 @@ if (level === 'intermediate') return 'carga';
 return 'volume';
 }
 
+// Retorna label do incremento para mostrar na UI
+function getIncrementoLabel(level, nomeExercicio) {
+  const compostos = ['agachamento','leg press','stiff','terra','supino','remada','puxada','desenvolvimento','barra','hack','bulgaro','afundo'];
+  const isC = compostos.some(c => (nomeExercicio||'').toLowerCase().includes(c));
+  if (level === 'beginner')     return isC ? '+2,5kg' : '+1kg';
+  if (level === 'intermediate') return isC ? '+5kg'   : '+2,5kg';
+  return isC ? '+2,5kg' : '+1,25kg';
+}
+
 function getExerciseHistory(exId, planId) {
 return state.sessions
 .filter(s => s.planId === planId && s.exercises?.some(e => e.exerciseId === exId))
@@ -3588,9 +3657,22 @@ function getWeightSuggestion(ex, planId, customIncrement = null) {
 const repRange = ex.reps.split('-');
 const minRep = parseInt(repRange[0]);
 const maxRep = parseInt(repRange[1]);
-const increment = customIncrement !== null ? customIncrement : (ex.increment || 2);
 const level = state.user?.level || 'intermediate';
 const phase = getMuzyPhase(level);
+// Incremento inteligente: nivel + tipo de exercicio
+let increment;
+if (customIncrement !== null) {
+  increment = customIncrement;
+} else if (ex.increment) {
+  increment = ex.increment;
+} else {
+  const compostos = ['agachamento','leg press','stiff','terra','supino','remada','puxada','desenvolvimento','barra','hack','bulgaro','afundo','levantamento'];
+  const nomeMin = (ex.name || '').toLowerCase();
+  const isComposto = compostos.some(c => nomeMin.includes(c));
+  if (level === 'beginner')           increment = isComposto ? 2.5 : 1;
+  else if (level === 'intermediate')  increment = isComposto ? 5   : 2.5;
+  else                               increment = isComposto ? 2.5 : 1.25;
+}
 const history = getExerciseHistory(ex.id, planId);
 if (history.length === 0) {
 return {
@@ -3706,6 +3788,11 @@ tip,
 
 function startWorkoutWithPlan(plan) {
   resumeAudio();
+  // Show first tip as toast after render
+  setTimeout(() => {
+    const firstEx = state.activeWorkout?.exercises?.[0];
+    if (firstEx?.tip?.msg) showTipToast(firstEx.tip.msg, firstEx.tip.type);
+  }, 800);
 if (!plan || plan.exercises.length === 0) {
 showNotif('⚠️', 'Treino vazio', 'Adicione exercícios a este treino', 'warning');
 return;
@@ -3745,141 +3832,254 @@ sets: Array.from({ length: ex.sets }, (_, i) => ({ set: i + 1, weight: suggestio
 openPreWorkoutModal(state.activeWorkout);
 }
 
+function showTipToast(msg, type, icon) {
+  const existing = document.getElementById('tip-toast');
+  if (existing) existing.remove();
+  const colors = {up:{bg:'var(--green)',tx:'#000'},volume:{bg:'var(--blue)',tx:'#fff'},deload:{bg:'var(--red)',tx:'#fff'},warning:{bg:'var(--yellow)',tx:'#000'},info:{bg:'var(--orange)',tx:'#fff'}};
+  const c = colors[type] || colors.info;
+  const t = document.createElement('div');
+  t.id = 'tip-toast';
+  t.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);background:'+c.bg+';color:'+c.tx+';padding:12px 18px;border-radius:14px;font-size:13px;font-weight:600;max-width:88vw;line-height:1.5;z-index:500;display:flex;gap:8px;align-items:flex-start;box-shadow:0 8px 24px rgba(0,0,0,0.4);animation:toastIn 0.3s ease;';
+  t.innerHTML = '<span style="flex-shrink:0">'+icon+'</span><span>'+msg+'</span>';
+  document.body.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(-8px)';t.style.transition='all 0.4s ease';setTimeout(()=>t.remove(),400);},5000);
+}
+
+function showTipToast(msg, type, icon) {
+  const existing = document.getElementById('tip-toast');
+  if (existing) existing.remove();
+  const colors = {up:{bg:'var(--green)',tx:'#000'},volume:{bg:'var(--blue)',tx:'#fff'},deload:{bg:'var(--red)',tx:'#fff'},warning:{bg:'var(--yellow)',tx:'#000'},info:{bg:'var(--orange)',tx:'#fff'}};
+  const c = colors[type] || colors.info;
+  const t = document.createElement('div');
+  t.id = 'tip-toast';
+  t.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);background:'+c.bg+';color:'+c.tx+';padding:12px 18px;border-radius:14px;font-size:13px;font-weight:600;max-width:88vw;line-height:1.5;z-index:500;display:flex;gap:8px;align-items:flex-start;box-shadow:0 8px 24px rgba(0,0,0,0.4);animation:toastIn 0.3s ease;';
+  t.innerHTML = '<span style="flex-shrink:0">'+icon+'</span><span>'+msg+'</span>';
+  document.body.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(-8px)';t.style.transition='all 0.4s ease';setTimeout(()=>t.remove(),400);},5000);
+}
+
 function renderActiveWorkout() {
 const el = document.getElementById('active-exercises');
 if (!state.activeWorkout) return;
+setTimeout(()=>{
+    state.activeWorkout.exercises.forEach((ex,exIdx)=>{
+      if(ex.tip && !ex._tipShown){
+        ex._tipShown=true;
+        setTimeout(()=>showTipToast(ex.tip.msg,ex.tip.type,
+          ex.tip.type==='up'?'🔥':ex.tip.type==='deload'?'😴':
+          ex.tip.type==='warning'?'⚠️':ex.tip.type==='volume'?'📦':'💡'),exIdx*300);
+      }
+    });
+  },100);
+setTimeout(()=>{
+    state.activeWorkout.exercises.forEach((ex,exIdx)=>{
+      if(ex.tip && !ex._tipShown){
+        ex._tipShown=true;
+        setTimeout(()=>showTipToast(ex.tip.msg,ex.tip.type,
+          ex.tip.type==='up'?'🔥':ex.tip.type==='deload'?'😴':
+          ex.tip.type==='warning'?'⚠️':ex.tip.type==='volume'?'📦':'💡'),exIdx*300);
+      }
+    });
+  },100);
 el.innerHTML = state.activeWorkout.exercises.map((ex, exIdx) => {
 const exercise = state.exercises.find(e => e.id === ex.exerciseId);
-const isUpgrade = ex.suggestedWeight > (exercise?.weight || 0);
 const restSecs = exercise?.rest || 90;
-return `<div class="card" id="ex-card-${exIdx}" style="margin-bottom:16px;">
-<div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
-<div style="flex:1;">
-<div style="font-weight:700; font-size:18px;">${ex.name}</div>
-<div style="display:flex; align-items:center; gap:8px; margin-top:6px; flex-wrap:wrap;">
-<span style="font-size:13px; color:var(--muted2);">${ex.currentWeight}kg · meta ${ex.targetMaxRep} reps</span>
-<span class="tag tag-orange" style="cursor:pointer; user-select:none;" onclick="quickChangeRest(${exIdx})" title="Clique para alterar descanso">
-⏱ ${formatRest(restSecs)}
-</span>
-<span class="tag" style="background:var(--border); color:var(--muted2); font-size:9px;">+${ex.increment || 2}kg/incremento</span>
-</div>
-</div>
-<div style="display:flex; flex-direction:column; gap:4px; align-items:flex-end;">
-${ex.tip?.type==='up' ? '<span class="tag tag-green">↑ Subir!</span>' : ex.tip?.type==='volume' ? '<span class="tag tag-blue">+ Volume</span>' : '<span class="tag tag-blue">Manter</span>'}
-${ex.phase ? '<span class="tag" style="background:var(--border);color:var(--muted2);font-size:9px;">' + (ex.phase==='execucao'?'📐 EXECUÇÃO':ex.phase==='carga'?'⚖️ CARGA':'📦 VOLUME') + '</span>' : ''}
-</div>
-</div>
-${ex.tip ? (() => {
-const tc = ex.tip.type==='up'      ? {bg:'var(--green-dim)',  bd:'var(--green)',      tx:'var(--green)',  ic:'🔥'} :
-ex.tip.type==='volume'  ? {bg:'var(--blue-dim)',   bd:'var(--blue)',       tx:'var(--blue)',   ic:'📦'} :
-ex.tip.type==='deload'  ? {bg:'var(--red-dim)',    bd:'var(--red)',        tx:'var(--red)',    ic:'😴'} :
-ex.tip.type==='warning' ? {bg:'rgba(255,215,64,0.1)',bd:'var(--yellow)',   tx:'var(--yellow)', ic:'⚠️'} :
-{bg:'var(--orange-dim)', bd:'var(--orange-mid)', tx:'var(--orange)', ic:'💡'};
+const isUp = ex.tip?.type === 'up';
+const isDeload = ex.tip?.type === 'deload';
+const isWarning = ex.tip?.type === 'warning';
+
+// Tip color scheme
+const tc = isUp      ? {bg:'var(--green-dim)',       bd:'var(--green)',      tx:'var(--green)',  ic:'🔥'} :
+           isDeload   ? {bg:'var(--red-dim)',          bd:'var(--red)',        tx:'var(--red)',    ic:'😴'} :
+           isWarning  ? {bg:'rgba(255,215,64,0.08)',   bd:'var(--yellow)',     tx:'var(--yellow)', ic:'⚠️'} :
+           ex.tip?.type==='volume' ? {bg:'var(--blue-dim)', bd:'var(--blue)', tx:'var(--blue)',   ic:'📦'} :
+                        {bg:'var(--orange-dim)',       bd:'var(--orange-mid)', tx:'var(--orange)', ic:'💡'};
+
 const confirmBtn = ex.suggestedWeight && !ex.progressionBlocked
-? '<button onclick="confirmProgression('+exIdx+')" style="margin-top:10px; background:var(--green); border:none; color:#000; font-weight:700; font-size:12px; padding:7px 14px; border-radius:8px; cursor:pointer; font-family:DM Sans,sans-serif;">✓ Confirmar progressão para '+ex.suggestedWeight+'kg</button>'
-: '';
-return '<div style="background:'+tc.bg+'; border:1px solid '+tc.bd+'; border-radius:10px; padding:12px 16px; margin-bottom:14px; color:'+tc.tx+'"><div style="display:flex; gap:8px; align-items:flex-start; font-size:13px;"><span>'+tc.ic+'</span><span>'+ex.tip.msg+'</span></div>'+confirmBtn+'</div>';
-})() : ''}
-<!-- CADÊNCIA WIDGET -->
-<div class="cadencia-widget" id="cadencia-${exIdx}">
-<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:2px;">
-<div style="font-size:12px; font-weight:700; color:var(--text);">⏱️ Cadência de execução</div>
-<button onclick="toggleCadencia(${exIdx})" id="cadencia-btn-${exIdx}"
-style="background:var(--orange); border:none; color:white; font-size:11px; font-weight:700; padding:5px 12px; border-radius:20px; cursor:pointer;">
-ATIVAR
-</button>
-</div>
-<div style="font-size:11px; color:var(--muted2); margin-bottom:8px;">Controle o tempo de cada fase da repetição</div>
-<!-- Blocos de fase -->
-<div class="cadencia-fase">
-<div class="cadencia-bloco" id="cbloco-${exIdx}-0">
-<div class="cadencia-num" id="cnum-${exIdx}-0">3</div>
-<div class="cadencia-label">DESCE</div>
-</div>
-<div class="cadencia-sep">·</div>
-<div class="cadencia-bloco" id="cbloco-${exIdx}-1">
-<div class="cadencia-num" id="cnum-${exIdx}-1">1</div>
-<div class="cadencia-label">PAUSA</div>
-</div>
-<div class="cadencia-sep">·</div>
-<div class="cadencia-bloco" id="cbloco-${exIdx}-2">
-<div class="cadencia-num" id="cnum-${exIdx}-2">2</div>
-<div class="cadencia-label">SOBE</div>
-</div>
-</div>
-<!-- Contador ativo (hidden initially) -->
-<div id="cadencia-active-${exIdx}" style="display:none; text-align:center; padding:8px 0 4px;">
-<div class="cadencia-fase-label" id="cadencia-fase-nome-${exIdx}">DESCE</div>
-<div class="cadencia-counter" id="cadencia-counter-${exIdx}">3</div>
-<div style="font-size:11px; color:var(--muted2); margin-top:4px;" id="cadencia-rep-${exIdx}">Rep 1</div>
-<div style="display:flex; gap:8px; justify-content:center; margin-top:10px;">
-<button onclick="cadenciaProxRep(${exIdx})" style="background:var(--card); border:1px solid var(--border2); color:var(--text); font-size:12px; font-weight:700; padding:7px 16px; border-radius:10px; cursor:pointer;">
-⏭ Próxima rep
-</button>
-<button onclick="pararCadencia(${exIdx})" style="background:var(--card); border:1px solid var(--border2); color:var(--muted2); font-size:12px; padding:7px 14px; border-radius:10px; cursor:pointer;">
-✕ Parar
-</button>
-</div>
-</div>
-<!-- Presets -->
-<div class="cadencia-preset-row">
-<div class="cadencia-preset ativo" onclick="setCadenciaPreset(${exIdx},'iniciante')" id="cpreset-${exIdx}-iniciante">2-0-2<br><span style="font-size:9px;font-weight:400;">Iniciante</span></div>
-<div class="cadencia-preset ativo" onclick="setCadenciaPreset(${exIdx},'hipertrofia')" id="cpreset-${exIdx}-hipertrofia" style="background:var(--orange);border-color:var(--orange);color:white;">3-1-2<br><span style="font-size:9px;font-weight:400;">Hipertrofia ★</span></div>
-<div class="cadencia-preset" onclick="setCadenciaPreset(${exIdx},'avancada')" id="cpreset-${exIdx}-avancada">4-1-2<br><span style="font-size:9px;font-weight:400;">Avançada</span></div>
-</div>
-</div>
-<div style="display:grid; grid-template-columns:36px 1fr 1fr 44px; gap:6px; margin-bottom:4px; padding-bottom:8px; border-bottom:1px solid var(--border);">
-<div style="font-size:10px; color:var(--muted); text-align:center;">SÉR.</div>
-<div style="font-size:10px; color:var(--muted); text-align:center;">PESO (kg)</div>
-<div style="font-size:10px; color:var(--muted); text-align:center;">REPS</div>
-<div style="font-size:10px; color:var(--muted); text-align:center;">✓</div>
-</div>
-<div style="font-size:11px; color:var(--muted2); text-align:center; margin-bottom:8px; line-height:1.4;">
-Ajuste o peso e as reps, depois toque em <strong style="color:var(--text);">✓</strong> para confirmar que finalizou a série
-</div>
-${ex.sets.map((set, setIdx) => `
-<div class="set-row" id="set-${exIdx}-${setIdx}" style="grid-template-columns:36px 1fr 1fr 44px; gap:6px;">
-<div class="set-number ${set.done ? 'done' : ''}" id="set-num-${exIdx}-${setIdx}">${set.set}</div>
-<div class="num-input-wrap" style="position:relative;">
-<button class="num-btn" onclick="adjustWeight(${exIdx},${setIdx},-0.5)" aria-label="Diminuir peso">−</button>
-<div style="display:flex; flex-direction:column; align-items:center; flex:1; min-width:0;">
-${setIdx > 0 && state.activeWorkout.exercises[exIdx].sets[setIdx-1].reps ? `<div style="font-size:9px; color:var(--muted2); line-height:1;">ant: ${state.activeWorkout.exercises[exIdx].sets[setIdx-1].weight}kg</div>` : ''}
-<input type="number" value="${set.weight || ex.weight}" step="0.5" min="0" id="w-${exIdx}-${setIdx}"
-oninput="updateSet(${exIdx},${setIdx},'weight',this.value)"
-onblur="formatarPeso(${exIdx},${setIdx})"
-inputmode="decimal"
-style="border:none; background:transparent; text-align:center; width:100%; font-family:'DM Mono',monospace; font-size:15px; font-weight:700; color:var(--orange); padding:0;">
-</div>
-<button class="num-btn" onclick="adjustWeight(${exIdx},${setIdx},0.5)" aria-label="Aumentar peso">+</button>
-</div>
-<div class="num-input-wrap" style="position:relative;">
-<button class="num-btn" onclick="adjustReps(${exIdx},${setIdx},-1)" aria-label="Diminuir repetições">−</button>
-<div style="display:flex; flex-direction:column; align-items:center; flex:1; min-width:0;">
-${setIdx > 0 && state.activeWorkout.exercises[exIdx].sets[setIdx-1].reps ? `<div style="font-size:9px; color:var(--muted2); line-height:1;">ant: ${state.activeWorkout.exercises[exIdx].sets[setIdx-1].reps} reps</div>` : `<div style="font-size:9px; color:var(--muted2); line-height:1;">meta: ${ex.targetMaxRep}</div>`}
-<input type="number" value="${set.reps || ''}" min="0" max="50" id="r-${exIdx}-${setIdx}"
-oninput="updateSet(${exIdx},${setIdx},'reps',this.value)"
-placeholder="0"
-style="border:none; background:transparent; text-align:center; width:100%; font-family:'DM Mono',monospace; font-size:15px; font-weight:700; color:var(--text); padding:0;">
-</div>
-<button class="num-btn" onclick="adjustReps(${exIdx},${setIdx},1)" aria-label="Aumentar repetições">+</button>
-</div>
-<button class="btn ${set.done ? 'btn-success' : 'btn-ghost'}" style="padding:6px 10px; font-size:14px; width:40px;"
-onclick="toggleSetDone(${exIdx},${setIdx})" aria-label="${set.done ? 'Desmarcar série' : 'Marcar série como concluída'}">
-${set.done ? '✓' : '○'}
-</button>
-</div>
-`).join('')}
-<div style="display:flex; gap:8px; margin-top:14px; padding-top:12px; border-top:1px solid var(--border);">
-<button class="btn btn-ghost" style="flex:1; font-size:12px;" onclick="openCoach(${exIdx})">
-🤖 Coach
-</button>
-<button class="btn" style="flex:2; font-size:13px; background:var(--orange-dim); border:1px solid var(--orange); color:var(--orange);" onclick="nextExerciseFromCard(${exIdx})">
-Próximo exercício →
-</button>
-</div>
+  ? `<button onclick="confirmProgression(${exIdx})"
+      style="margin-top:10px;background:var(--green);border:none;color:#000;font-weight:800;
+             font-size:12px;padding:8px 16px;border-radius:8px;cursor:pointer;width:100%;">
+      ↑ Confirmar ${ex.suggestedWeight}kg no próximo treino
+    </button>`
+  : '';
+
+// Phase badge — compact
+const phaseLabel = ex.phase === 'execucao' ? '📐 Execução'
+                 : ex.phase === 'carga'    ? '⚖️ Carga'
+                 : ex.phase === 'volume'   ? '📦 Volume' : '';
+
+// Sets HTML
+const setsHTML = ex.sets.map((set, setIdx) => {
+  const prevSet = setIdx > 0 ? ex.sets[setIdx - 1] : null;
+  const hasPrev = prevSet && prevSet.reps;
+  // Show suggestion badge on last undone set if suggestedWeight exists
+  const isLastUndone = !set.done && ex.sets.slice(setIdx + 1).every(s => !s.done);
+  const showSuggestion = isLastUndone && ex.suggestedWeight && !ex.progressionBlocked;
+  return `
+  <div class="set-row" id="set-${exIdx}-${setIdx}" style="grid-template-columns:32px 1fr 1fr 44px; gap:8px; margin-bottom:4px;">
+    <div class="set-number ${set.done ? 'done' : ''}" id="set-num-${exIdx}-${setIdx}">${set.set}</div>
+
+    <!-- Peso -->
+    <div class="num-input-wrap">
+      <button class="num-btn" onclick="adjustWeight(${exIdx},${setIdx},-0.5)">−</button>
+      <div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;">
+        ${hasPrev ? `<div style="font-size:9px;color:var(--muted2);line-height:1;">${prevSet.weight}kg</div>` : ''}
+        <input type="number" value="${set.weight || ex.currentWeight}" step="0.5" min="0"
+          id="w-${exIdx}-${setIdx}"
+          oninput="updateSet(${exIdx},${setIdx},'weight',this.value)"
+          onblur="formatarPeso(${exIdx},${setIdx})"
+          inputmode="decimal"
+          style="border:none;background:transparent;text-align:center;width:100%;
+                 font-family:'DM Mono',monospace;font-size:18px;font-weight:800;
+                 color:var(--orange);padding:0;">
+        ${showSuggestion ? '<span class=\"set-suggestion\">↑ ' + ex.suggestedWeight + 'kg</span>' : ''}
+      </div>
+      <button class="num-btn" onclick="adjustWeight(${exIdx},${setIdx},0.5)">+</button>
+    </div>
+
+    <!-- Reps -->
+    <div class="num-input-wrap" style="position:relative;">
+      <button class="num-btn" onclick="adjustReps(${exIdx},${setIdx},-1)">−</button>
+      <div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:0;">
+        <div style="font-size:9px;color:var(--muted2);line-height:1;">
+          ${hasPrev ? prevSet.reps + ' reps' : 'meta ' + ex.targetMaxRep}
+        </div>
+        <input type="number" value="${set.reps || ''}" min="0" max="50"
+          id="r-${exIdx}-${setIdx}"
+          oninput="updateSet(${exIdx},${setIdx},'reps',this.value)"
+          placeholder="${ex.targetMaxRep}"
+          style="border:none;background:transparent;text-align:center;width:100%;
+                 font-family:'DM Mono',monospace;font-size:18px;font-weight:800;
+                 color:var(--text);padding:0;">
+      </div>
+      <button class="num-btn" onclick="adjustReps(${exIdx},${setIdx},1)">+</button>
+    </div>
+
+    <!-- Confirmar -->
+    <button class="btn ${set.done ? 'btn-success' : 'btn-ghost'}"
+      style="padding:6px;font-size:18px;width:44px;height:44px;"
+      onclick="${set.done ? '' : 'startExecTimer(' + exIdx + ',' + setIdx + ');'}toggleSetDone(${exIdx},${setIdx})">
+      ${set.done ? '✓' : '▶'}
+    </button>
+  </div>`;
+}).join('');
+
+return `
+<div class="card" id="ex-card-${exIdx}" style="margin-bottom:12px;padding:18px 16px;">
+
+  <!-- HEADER: nome + timer + fase -->
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;">
+    <div style="font-weight:800;font-size:20px;line-height:1.2;flex:1;">${ex.name}</div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;margin-left:8px;">
+      <span class="tag tag-orange" style="cursor:pointer;" onclick="quickChangeRest(${exIdx})" title="Alterar descanso">
+        ⏱ ${formatRest(restSecs)}
+      </span>
+      ${phaseLabel ? `<span style="font-size:10px;color:var(--muted2);">${phaseLabel}</span>` : ''}
+    </div>
+  </div>
+
+  <!-- SUBTÍTULO: peso atual + meta em linha única discreta -->
+  <div style="font-size:13px;color:var(--muted2);margin-bottom:${ex.tip ? '12px' : '16px'};">
+    ${ex.currentWeight}kg · ${ex.targetMinRep}–${ex.targetMaxRep} reps · +${ex.increment || 2}kg/incremento
+  </div>
+
+  ${ex.suggestedWeight && !ex.progressionBlocked ? confirmBtn : ''}
+
+  <!-- COLUNAS HEADER -->
+  <div style="display:grid;grid-template-columns:32px 1fr 1fr 44px;gap:8px;
+              margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border);">
+    <div style="font-size:10px;color:var(--muted);text-align:center;">SÉR.</div>
+    <div style="font-size:10px;color:var(--muted);text-align:center;">PESO (kg)</div>
+    <div style="font-size:10px;color:var(--muted);text-align:center;">REPS</div>
+    <div style="font-size:10px;color:var(--muted);text-align:center;">✓</div>
+  </div>
+
+  <!-- SÉRIES -->
+  ${ex.sets.map((set, setIdx) => `
+    <div class="exec-timer" id="exec-timer-${exIdx}-${setIdx}">
+      <div class="exec-timer-label">⏱ Tempo de execução ideal</div>
+      <div class="exec-timer-num" id="exec-timer-num-${exIdx}-${setIdx}">—</div>
+      <div class="exec-timer-sub" id="exec-timer-sub-${exIdx}-${setIdx}"></div>
+      <div class="exec-timer-bar"><div class="exec-timer-bar-fill" id="exec-timer-fill-${exIdx}-${setIdx}" style="width:100%"></div></div>
+    </div>
+  `).join('')}
+  ${setsHTML}
+
+  <!-- CADÊNCIA — colapsada por padrão -->
+  <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;"
+         onclick="toggleCadenciaCollapse(${exIdx})">
+      <div style="font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px;">
+        ⏱️ Cadência
+        <span style="font-size:11px;color:var(--muted2);font-weight:400;" id="cadencia-preset-label-${exIdx}">3-1-2</span>
+      </div>
+      <button onclick="event.stopPropagation();toggleCadencia(${exIdx})" id="cadencia-btn-${exIdx}"
+        style="background:var(--orange);border:none;color:white;font-size:11px;font-weight:700;
+               padding:5px 14px;border-radius:20px;cursor:pointer;">
+        ATIVAR
+      </button>
+    </div>
+
+    <!-- Corpo colapsável -->
+    <div id="cadencia-body-${exIdx}" style="display:none;margin-top:12px;">
+      <div class="cadencia-widget" id="cadencia-${exIdx}" style="background:transparent;border:none;padding:0;">
+        <div class="cadencia-fase">
+          <div class="cadencia-bloco" id="cbloco-${exIdx}-0">
+            <div class="cadencia-num" id="cnum-${exIdx}-0">3</div>
+            <div class="cadencia-label">DESCE</div>
+          </div>
+          <div class="cadencia-sep">·</div>
+          <div class="cadencia-bloco" id="cbloco-${exIdx}-1">
+            <div class="cadencia-num" id="cnum-${exIdx}-1">1</div>
+            <div class="cadencia-label">PAUSA</div>
+          </div>
+          <div class="cadencia-sep">·</div>
+          <div class="cadencia-bloco" id="cbloco-${exIdx}-2">
+            <div class="cadencia-num" id="cnum-${exIdx}-2">2</div>
+            <div class="cadencia-label">SOBE</div>
+          </div>
+        </div>
+        <div id="cadencia-active-${exIdx}" style="display:none;text-align:center;padding:8px 0 4px;">
+          <div class="cadencia-fase-label" id="cadencia-fase-nome-${exIdx}">DESCE</div>
+          <div class="cadencia-counter" id="cadencia-counter-${exIdx}">3</div>
+          <div style="font-size:11px;color:var(--muted2);margin-top:4px;" id="cadencia-rep-${exIdx}">Rep 1</div>
+          <div style="display:flex;gap:8px;justify-content:center;margin-top:10px;">
+            <button onclick="cadenciaProxRep(${exIdx})"
+              style="background:var(--card);border:1px solid var(--border2);color:var(--text);
+                     font-size:12px;font-weight:700;padding:7px 16px;border-radius:10px;cursor:pointer;">
+              ⏭ Próxima rep
+            </button>
+            <button onclick="pararCadencia(${exIdx})"
+              style="background:var(--card);border:1px solid var(--border2);color:var(--muted2);
+                     font-size:12px;padding:7px 14px;border-radius:10px;cursor:pointer;">
+              ✕ Parar
+            </button>
+          </div>
+        </div>
+        <div class="cadencia-preset-row" style="margin-top:10px;">
+          <div class="cadencia-preset ativo" onclick="setCadenciaPreset(${exIdx},'iniciante')" id="cpreset-${exIdx}-iniciante">2-0-2<br><span style="font-size:9px;font-weight:400;">Iniciante</span></div>
+          <div class="cadencia-preset ativo" onclick="setCadenciaPreset(${exIdx},'hipertrofia')" id="cpreset-${exIdx}-hipertrofia" style="background:var(--orange);border-color:var(--orange);color:white;">3-1-2<br><span style="font-size:9px;font-weight:400;">Hipertrofia ★</span></div>
+          <div class="cadencia-preset" onclick="setCadenciaPreset(${exIdx},'avancada')" id="cpreset-${exIdx}-avancada">4-1-2<br><span style="font-size:9px;font-weight:400;">Avançada</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTÕES AÇÃO -->
+  <div style="display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
+    <button class="btn btn-ghost" style="flex:1;font-size:12px;" onclick="openCoach(${exIdx})">
+      🤖 Coach
+    </button>
+    <button class="btn" onclick="nextExerciseFromCard(${exIdx})"
+      style="flex:2;font-size:13px;background:var(--orange-dim);border:1px solid var(--orange);color:var(--orange);">
+      Próximo exercício →
+    </button>
+  </div>
+
 </div>`;
 }).join('');
 }
+
 
 function nextExerciseFromCard(exIdx) {
 const card = document.getElementById('ex-card-' + exIdx);
@@ -3972,6 +4172,13 @@ return;
 }
 set.done = !set.done;
 if (set.done) {
+  // Stop exec timer for this set
+  stopExecTimer(exIdx, setIdx);
+  // Show tip for next exercise if exists
+  const nextEx = state.activeWorkout.exercises[exIdx + 1];
+  if (nextEx?.tip?.msg && setIdx === activeEx.sets.length - 2) {
+    setTimeout(() => showTipToast(nextEx.tip.msg, nextEx.tip.type), 1500);
+  }
 const pesoAtual = set.weight || activeEx.currentWeight;
 activeEx.sets.forEach((s, i) => {
 if (i > setIdx && !s.done && (!s.weight || s.weight === activeEx.currentWeight || s.weight === activeEx.weight)) {
@@ -4477,6 +4684,7 @@ function _focoNextSetReal() {
   startRestTimer(restSecs, ex.name.toUpperCase(), `Série ${focoState.setIdx+1} concluída`);
   focoState.setIdx++;
   if (focoState.setIdx >= ex.sets.length) { _focoNextExerciseReal(); return; }
+  saveFocoSession(); // Auto-save after every set
   focoRender();
 }
 
@@ -4489,6 +4697,7 @@ function _focoNextExerciseReal() {
 focoState.exIdx++;
 focoState.setIdx = 0;
 if (focoState.exIdx >= focoState.exercises.length) { focoShowFinish(); return; }
+saveFocoSession(); // Save after completing each exercise
 skipTimer();
 focoRender();
 }
@@ -4513,6 +4722,7 @@ progressions: 0
 };
 state.sessions.push(session);
 save();
+clearFocoSession(); // Remove saved session — treino concluído
 updateDashboard();
 document.getElementById('foco-finish').style.display = 'none';
 document.getElementById('foco-idle').style.display = 'flex';
@@ -5592,6 +5802,12 @@ if (el) el.textContent = n;
 if (c.ativa) { pararCadencia(exIdx); toggleCadencia(exIdx); }
 }
 
+function toggleCadenciaCollapse(exIdx) {
+  const body = document.getElementById(`cadencia-body-${exIdx}`);
+  if (!body) return;
+  body.style.display = body.style.display === 'none' ? 'block' : 'none';
+}
+
 function toggleCadencia(exIdx) {
 const c = getCadencia(exIdx);
 if (c.ativa) {
@@ -6370,6 +6586,202 @@ function validarEstimulo() {
   vState.validado = true;
 }
 
+// ═══════════════════════════════════════
+//  TIP TOAST
+// ═══════════════════════════════════════
+let tipToastTimer = null;
+
+function showTipToast(msg, type) {
+  const icons = { up:'🔥', deload:'😴', warning:'⚠️', volume:'📦', info:'💡' };
+  const toast = document.getElementById('tip-toast');
+  document.getElementById('tip-toast-icon').textContent = icons[type] || '💡';
+  document.getElementById('tip-toast-text').textContent = msg;
+  // Color border based on type
+  const colors = { up:'#4CAF50', deload:'#e57373', warning:'#FFB300', volume:'#64B5F6', info:'var(--orange-mid)' };
+  toast.style.borderColor = colors[type] || 'var(--orange-mid)';
+  toast.classList.add('show');
+  clearTimeout(tipToastTimer);
+  tipToastTimer = setTimeout(hideTipToast, 5000);
+}
+
+function hideTipToast() {
+  document.getElementById('tip-toast')?.classList.remove('show');
+}
+
+// ═══════════════════════════════════════
+//  CRONÔMETRO DE EXECUÇÃO POR CADÊNCIA
+// ═══════════════════════════════════════
+let execTimerInterval = null;
+let execTimerData = null;
+
+function calcExecTime(exIdx, setIdx) {
+  // Get cadencia preset for this exercise
+  const c = getCadencia ? getCadencia(exIdx) : null;
+  const CADENCIA_PRESETS_LOCAL = {
+    hipertrofia: { desce:3, pausa:1, sobe:2 },
+    iniciante:   { desce:2, pausa:0, sobe:2 },
+    avancada:    { desce:4, pausa:1, sobe:2 },
+  };
+  const preset = c?.preset || 'hipertrofia';
+  const cfg = CADENCIA_PRESETS_LOCAL[preset] || CADENCIA_PRESETS_LOCAL.hipertrofia;
+  const secsPerRep = cfg.desce + cfg.pausa + cfg.sobe;
+
+  // Get target reps for this exercise
+  const activeEx = state.activeWorkout?.exercises[exIdx];
+  const targetReps = activeEx?.targetMaxRep || 12;
+
+  return {
+    total: secsPerRep * targetReps,
+    secsPerRep,
+    targetReps,
+    preset,
+    cfg,
+  };
+}
+
+function startExecTimer(exIdx, setIdx) {
+  if (execTimerInterval) clearInterval(execTimerInterval);
+
+  const data = calcExecTime(exIdx, setIdx);
+  execTimerData = { ...data, exIdx, setIdx, elapsed: 0, started: Date.now() };
+
+  const containerId = 'exec-timer-' + exIdx + '-' + setIdx;
+  const el = document.getElementById(containerId);
+  if (!el) return;
+
+  el.classList.add('active');
+  _updateExecTimerDisplay(el, data.total, data.total, data);
+
+  execTimerInterval = setInterval(() => {
+    execTimerData.elapsed = Math.floor((Date.now() - execTimerData.started) / 1000);
+    const remaining = Math.max(0, data.total - execTimerData.elapsed);
+    _updateExecTimerDisplay(el, remaining, data.total, data);
+    if (remaining <= 0) {
+      clearInterval(execTimerInterval);
+      el.querySelector('.exec-timer-num').textContent = '✓';
+      el.querySelector('.exec-timer-num').className = 'exec-timer-num ok';
+      el.querySelector('.exec-timer-sub').textContent = 'Tempo ideal atingido — confirme a série!';
+    }
+  }, 1000);
+}
+
+function stopExecTimer(exIdx, setIdx) {
+  if (execTimerInterval) { clearInterval(execTimerInterval); execTimerInterval = null; }
+  const el = document.getElementById('exec-timer-' + exIdx + '-' + setIdx);
+  if (el) el.classList.remove('active');
+}
+
+function _updateExecTimerDisplay(el, remaining, total, data) {
+  const numEl = el.querySelector('.exec-timer-num');
+  const subEl = el.querySelector('.exec-timer-sub');
+  const fill  = el.querySelector('.exec-timer-bar-fill');
+
+  numEl.textContent = remaining;
+  const pct = (remaining / total) * 100;
+  if (fill) fill.style.width = pct + '%';
+
+  // Color feedback
+  if (remaining <= 0) {
+    numEl.className = 'exec-timer-num ok';
+  } else if (execTimerData?.elapsed > total * 1.3) {
+    numEl.className = 'exec-timer-num fast';
+    subEl.textContent = 'Muito devagar — verifique as reps';
+  } else {
+    numEl.className = 'exec-timer-num';
+    const repsFeitas = total > 0 ? Math.floor((execTimerData?.elapsed || 0) / data.secsPerRep) : 0;
+    subEl.textContent = data.preset + ' · ' + data.cfg.desce + '-' + data.cfg.pausa + '-' + data.cfg.sobe + ' · ~' + repsFeitas + '/' + data.targetReps + ' reps';
+  }
+}
+
+// ═══════════════════════════════════════
+//  AUTO-SAVE TREINO EM EXECUÇÃO
+// ═══════════════════════════════════════
+const FOCO_SESSION_KEY = 'progressar_foco_session';
+
+function saveFocoSession() {
+  try {
+    // Don't save timerInterval (not serializable)
+    const toSave = {
+      planId: focoState.planId,
+      exIdx: focoState.exIdx,
+      setIdx: focoState.setIdx,
+      startTime: focoState.startTime,
+      currentWeight: focoState.currentWeight,
+      currentReps: focoState.currentReps,
+      exercises: focoState.exercises,
+      savedAt: Date.now(),
+    };
+    localStorage.setItem(FOCO_SESSION_KEY, JSON.stringify(toSave));
+  } catch(e) { console.warn('saveFocoSession erro:', e); }
+}
+
+function clearFocoSession() {
+  try { localStorage.removeItem(FOCO_SESSION_KEY); } catch(e) {}
+}
+
+function loadFocoSession() {
+  try {
+    const raw = localStorage.getItem(FOCO_SESSION_KEY);
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    // Ignore sessions older than 24h
+    if (Date.now() - s.savedAt > 86400000) { clearFocoSession(); return null; }
+    return s;
+  } catch(e) { return null; }
+}
+
+function checkFocoResume() {
+  const saved = loadFocoSession();
+  if (!saved) return;
+  const plan = state.workoutPlans?.find(p => p.id === saved.planId);
+  if (!plan) { clearFocoSession(); return; }
+
+  const minAgo = Math.round((Date.now() - saved.savedAt) / 60000);
+  const tempoStr = minAgo < 60 ? `${minAgo} min atrás` : `${Math.round(minAgo/60)}h atrás`;
+  const exAtual = saved.exercises[saved.exIdx];
+  const serieInfo = exAtual ? `${exAtual.name || 'Exercício'} · Série ${saved.setIdx + 1}` : '';
+
+  // Show resume banner
+  const banner = document.getElementById('foco-resume-banner');
+  if (banner) {
+    document.getElementById('foco-resume-plan').textContent = plan.name;
+    document.getElementById('foco-resume-info').textContent = `${serieInfo} · ${tempoStr}`;
+    banner.style.display = 'flex';
+  }
+}
+
+function resumeFocoSession() {
+  const saved = loadFocoSession();
+  if (!saved) return;
+
+  focoState = {
+    ...saved,
+    timerInterval: null,
+  };
+
+  document.getElementById('foco-resume-banner').style.display = 'none';
+  document.getElementById('foco-idle').style.display = 'none';
+  document.getElementById('foco-active').style.display = 'block';
+
+  const plan = state.workoutPlans?.find(p => p.id === saved.planId);
+  if (plan) document.getElementById('foco-workout-name').textContent = plan.name.toUpperCase();
+
+  focoState.timerInterval = setInterval(() => {
+    const e = Math.floor((Date.now() - focoState.startTime) / 1000);
+    const m = String(Math.floor(e/60)).padStart(2,'0'), s = String(e%60).padStart(2,'0');
+    const el = document.getElementById('foco-timer-label');
+    if (el) el.textContent = `${m}:${s} em andamento`;
+  }, 1000);
+
+  focoRender();
+  showNotif('🔄', 'Treino retomado!', `Continuando de onde parou — ${focoState.exercises[focoState.exIdx]?.name || 'exercício'}`, 'success');
+}
+
+function descartarFocoSession() {
+  clearFocoSession();
+  document.getElementById('foco-resume-banner').style.display = 'none';
+}
+
 try {
 load();
 } catch(e) {
@@ -6421,5 +6833,12 @@ deferredPrompt = null;
 }
 }
 </script>
+  <!-- TIP TOAST -->
+  <div id="tip-toast" class="tip-toast">
+    <span class="tip-icon" id="tip-toast-icon">💡</span>
+    <span class="tip-text" id="tip-toast-text"></span>
+    <span class="tip-close" onclick="hideTipToast()">✕</span>
+  </div>
+
 </body>
 </html>
