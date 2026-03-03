@@ -697,6 +697,34 @@
     from { opacity:0; transform:translateX(-50%) translateY(-12px); }
     to   { opacity:1; transform:translateX(-50%) translateY(0); }
   }
+  /* ── INICIAR SÉRIE ── */
+  .serie-start-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--orange);
+    border: none;
+    border-radius: 14px;
+    color: white;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    transition: transform 0.1s, background 0.1s;
+  }
+  .serie-start-btn:active { transform: scale(0.97); }
+  .serie-start-btn.counting {
+    background: #111;
+    border: 2px solid var(--orange);
+    color: var(--orange);
+    pointer-events: none;
+    font-size: 22px;
+  }
+
   /* ── TIP TOAST ── */
   .tip-toast {
     position: fixed;
@@ -3819,6 +3847,7 @@ name: ex.name,
 currentWeight: suggestion.weight,
 suggestedWeight: suggestion.suggestedWeight,
 suggestedReps: suggestion.minRep,
+targetMinRep: suggestion.minRep,
 targetMaxRep: suggestion.maxRep,
 phase: suggestion.phase,
 increment: suggestion.increment,
@@ -3830,6 +3859,8 @@ sets: Array.from({ length: ex.sets }, (_, i) => ({ set: i + 1, weight: suggestio
 })
 };
 openPreWorkoutModal(state.activeWorkout);
+  // Pre-arm exec timer for first set after workout starts
+  setTimeout(() => startExecTimer(0, 0), 1200);
 }
 
 function showTipToast(msg, type, icon) {
@@ -3909,13 +3940,24 @@ const phaseLabel = ex.phase === 'execucao' ? '📐 Execução'
                  : ex.phase === 'volume'   ? '📦 Volume' : '';
 
 // Sets HTML
+// Find first undone set index for this exercise
+const firstUndoneIdx = ex.sets.findIndex(s => !s.done);
+
 const setsHTML = ex.sets.map((set, setIdx) => {
   const prevSet = setIdx > 0 ? ex.sets[setIdx - 1] : null;
   const hasPrev = prevSet && prevSet.reps;
-  // Show suggestion badge on last undone set if suggestedWeight exists
   const isLastUndone = !set.done && ex.sets.slice(setIdx + 1).every(s => !s.done);
   const showSuggestion = isLastUndone && ex.suggestedWeight && !ex.progressionBlocked;
+  // Show start button only before the first undone set
+  const isFirstUndone = !set.done && setIdx === firstUndoneIdx;
   return `
+  ${isFirstUndone ? `
+  <div id="start-btn-${exIdx}-${setIdx}">
+    <button class="serie-start-btn" id="serie-btn-${exIdx}-${setIdx}"
+      onclick="iniciarSerieCountdown(${exIdx}, ${setIdx})">
+      ▶ Iniciar série ${setIdx + 1}
+    </button>
+  </div>` : ''}
   <div class="set-row" id="set-${exIdx}-${setIdx}" style="grid-template-columns:32px 1fr 1fr 44px; gap:8px; margin-bottom:4px;">
     <div class="set-number ${set.done ? 'done' : ''}" id="set-num-${exIdx}-${setIdx}">${set.set}</div>
 
@@ -3958,8 +4000,8 @@ const setsHTML = ex.sets.map((set, setIdx) => {
     <!-- Confirmar -->
     <button class="btn ${set.done ? 'btn-success' : 'btn-ghost'}"
       style="padding:6px;font-size:18px;width:44px;height:44px;"
-      onclick="${set.done ? '' : 'startExecTimer(' + exIdx + ',' + setIdx + ');'}toggleSetDone(${exIdx},${setIdx})">
-      ${set.done ? '✓' : '▶'}
+      onclick="toggleSetDone(${exIdx},${setIdx})">
+      ${set.done ? '✓' : '○'}
     </button>
   </div>`;
 }).join('');
@@ -3980,7 +4022,7 @@ return `
 
   <!-- SUBTÍTULO: peso atual + meta em linha única discreta -->
   <div style="font-size:13px;color:var(--muted2);margin-bottom:${ex.tip ? '12px' : '16px'};">
-    ${ex.currentWeight}kg · ${ex.targetMinRep}–${ex.targetMaxRep} reps · +${ex.increment || 2}kg/incremento
+    ${ex.currentWeight}kg · ${ex.targetMinRep || ex.suggestedReps || "?"}–${ex.targetMaxRep} reps · +${ex.increment || 2}kg/incremento
   </div>
 
   ${ex.suggestedWeight && !ex.progressionBlocked ? confirmBtn : ''}
@@ -4172,17 +4214,40 @@ return;
 }
 set.done = !set.done;
 if (set.done) {
-  // Stop exec timer for this set
   stopExecTimer(exIdx, setIdx);
-  // Show tip for next exercise if exists
+
+  // Se cadência ativa, reinicia para o próximo set
+  const cad = getCadencia(exIdx);
+  if (cad?.ativa) {
+    pararCadencia(exIdx);
+    setTimeout(() => iniciarCadencia(exIdx), 300);
+  } else {
+    // Sem cadência: inicia exec-timer para o próximo set
+    const nextSetIdx = setIdx + 1;
+    if (nextSetIdx < activeEx.sets.length && !activeEx.sets[nextSetIdx].done) {
+      setTimeout(() => startExecTimer(exIdx, nextSetIdx), 300);
+    }
+  }
+
+  // Tip para próximo exercício
   const nextEx = state.activeWorkout.exercises[exIdx + 1];
   if (nextEx?.tip?.msg && setIdx === activeEx.sets.length - 2) {
     setTimeout(() => showTipToast(nextEx.tip.msg, nextEx.tip.type), 1500);
   }
+
+  // PESO SUGERIDO INLINE: ao confirmar série, peso sugerido vai direto
+  // para o campo da próxima série (e todas as não concluídas seguintes)
+  const pesoParaProximo = (activeEx.suggestedWeight && !activeEx.progressionBlocked)
+    ? activeEx.suggestedWeight
+    : (set.weight || activeEx.currentWeight);
+
 const pesoAtual = set.weight || activeEx.currentWeight;
 activeEx.sets.forEach((s, i) => {
-if (i > setIdx && !s.done && (!s.weight || s.weight === activeEx.currentWeight || s.weight === activeEx.weight)) {
-s.weight = pesoAtual;
+if (i > setIdx && !s.done) {
+  // Usar peso sugerido na próxima série se disponível
+  s.weight = (i === setIdx + 1 && activeEx.suggestedWeight && !activeEx.progressionBlocked)
+    ? activeEx.suggestedWeight
+    : pesoAtual;
 }
 });
 flashRestBadge(exIdx, setIdx);
@@ -5818,28 +5883,61 @@ iniciarCadencia(exIdx);
 }
 
 async function iniciarCadencia(exIdx) {
-await resumeAudio();
-beepCadencia('completo');
-setTimeout(() => falarFase('Desça devagar'), 300);
-const c = getCadencia(exIdx);
-const ex = state.activeWorkout?.exercises[exIdx];
-if (ex) {
-const parts = (ex.reps || '8-12').toString().split('-');
-c.targetReps = parseInt(parts[parts.length - 1]) || 12;
+  await resumeAudio();
+  beepCadencia('completo');
+  setTimeout(() => falarFase('Desça devagar'), 300);
+  const c = getCadencia(exIdx);
+  const ex = state.activeWorkout?.exercises[exIdx];
+  if (ex) {
+    const parts = (ex.reps || '8-12').toString().split('-');
+    c.targetReps = parseInt(parts[parts.length - 1]) || 12;
+  }
+  c.ativa = true;
+  c.fase = 0;
+  c.rep = 1;
+  const cfg = CADENCIA_PRESETS[c.preset];
+  c.contador = cfg.desce;
+  c.totalSegundos = (cfg.desce + cfg.pausa + cfg.sobe) * c.targetReps;
+  c.segundosDecorridos = 0;
+
+  const widget = document.getElementById(`cadencia-${exIdx}`);
+  const activeDiv = document.getElementById(`cadencia-active-${exIdx}`);
+  const btn = document.getElementById(`cadencia-btn-${exIdx}`);
+  if (widget) widget.classList.add('ativa');
+  if (activeDiv) activeDiv.style.display = 'block';
+  if (btn) { btn.textContent = 'PAUSAR'; btn.style.background = 'var(--muted2)'; }
+  atualizarDisplayCadencia(exIdx);
+
+  // Sincronizar exec-timer com cadência — encontra o set ativo
+  const setIdx = _getSetAtivo(exIdx);
+  _syncExecTimerWithCadencia(exIdx, setIdx, c.totalSegundos);
+
+  c.interval = setInterval(() => tickCadencia(exIdx), 1000);
 }
-c.ativa = true;
-c.fase = 0;
-c.rep = 1;
-const cfg = CADENCIA_PRESETS[c.preset];
-c.contador = cfg.desce;
-const widget = document.getElementById(`cadencia-${exIdx}`);
-const activeDiv = document.getElementById(`cadencia-active-${exIdx}`);
-const btn = document.getElementById(`cadencia-btn-${exIdx}`);
-if (widget) widget.classList.add('ativa');
-if (activeDiv) activeDiv.style.display = 'block';
-if (btn) { btn.textContent = 'PAUSAR'; btn.style.background = 'var(--muted2)'; }
-atualizarDisplayCadencia(exIdx);
-c.interval = setInterval(() => tickCadencia(exIdx), 1000);
+
+function _getSetAtivo(exIdx) {
+  const ex = state.activeWorkout?.exercises[exIdx];
+  if (!ex) return 0;
+  // Primeiro set não concluído
+  const idx = ex.sets.findIndex(s => !s.done);
+  return idx >= 0 ? idx : ex.sets.length - 1;
+}
+
+function _syncExecTimerWithCadencia(exIdx, setIdx, totalSecs) {
+  // Parar qualquer exec-timer independente
+  if (execTimerInterval) { clearInterval(execTimerInterval); execTimerInterval = null; }
+  // Mostrar o exec-timer do set ativo
+  const el = document.getElementById(`exec-timer-${exIdx}-${setIdx}`);
+  if (!el) return;
+  el.classList.add('active');
+  const numEl = el.querySelector('.exec-timer-num');
+  const subEl = el.querySelector('.exec-timer-sub');
+  const fill  = el.querySelector('.exec-timer-bar-fill');
+  if (numEl) numEl.textContent = totalSecs;
+  if (fill)  fill.style.width = '100%';
+  if (subEl) subEl.textContent = 'Cadência ativa — execute no ritmo dos beeps';
+  // Store reference for tickCadencia to update
+  window._cadExecTimer = { el, numEl, subEl, fill, totalSecs, remaining: totalSecs };
 }
 
 function tickCadencia(exIdx) {
@@ -5867,7 +5965,20 @@ if (c.contador <= 0) {
   }
   c.contador = fases[c.fase];
 }
-atualizarDisplayCadencia(exIdx);
+  // Sync exec-timer countdown
+  if (window._cadExecTimer) {
+    const t = window._cadExecTimer;
+    t.remaining = Math.max(0, t.totalSecs - (c.segundosDecorridos || 0));
+    if (t.numEl) t.numEl.textContent = t.remaining;
+    const pct = (t.remaining / t.totalSecs) * 100;
+    if (t.fill) t.fill.style.width = pct + '%';
+    if (t.remaining <= 0 && t.numEl) {
+      t.numEl.textContent = '✓';
+      t.numEl.className = 'exec-timer-num ok';
+    }
+  }
+  c.segundosDecorridos = (c.segundosDecorridos || 0) + 1;
+  atualizarDisplayCadencia(exIdx);
 }
 
 // Speech synthesis for cadência
@@ -5978,21 +6089,23 @@ atualizarDisplayCadencia(exIdx);
 }
 
 function pararCadencia(exIdx) {
-const c = getCadencia(exIdx);
-if (c.interval) { clearInterval(c.interval); c.interval = null; }
-c.ativa = false;
-c.fase = 0;
-c.rep = 1;
-const widget = document.getElementById(`cadencia-${exIdx}`);
-const activeDiv = document.getElementById(`cadencia-active-${exIdx}`);
-const btn = document.getElementById(`cadencia-btn-${exIdx}`);
-if (widget) widget.classList.remove('ativa');
-if (activeDiv) activeDiv.style.display = 'none';
-if (btn) { btn.textContent = 'ATIVAR'; btn.style.background = 'var(--orange)'; }
-[0,1,2].forEach(i => {
-const bloco = document.getElementById(`cbloco-${exIdx}-${i}`);
-if (bloco) bloco.className = 'cadencia-bloco';
-});
+  const c = getCadencia(exIdx);
+  if (c.interval) { clearInterval(c.interval); c.interval = null; }
+  c.ativa = false;
+  c.fase = 0;
+  c.rep = 1;
+  c.segundosDecorridos = 0;
+  window._cadExecTimer = null;
+  const widget = document.getElementById(`cadencia-${exIdx}`);
+  const activeDiv = document.getElementById(`cadencia-active-${exIdx}`);
+  const btn = document.getElementById(`cadencia-btn-${exIdx}`);
+  if (widget) widget.classList.remove('ativa');
+  if (activeDiv) activeDiv.style.display = 'none';
+  if (btn) { btn.textContent = 'ATIVAR'; btn.style.background = 'var(--orange)'; }
+  [0,1,2].forEach(i => {
+    const bloco = document.getElementById(`cbloco-${exIdx}-${i}`);
+    if (bloco) bloco.className = 'cadencia-bloco';
+  });
 }
 
 const BADGES = [
@@ -6587,6 +6700,45 @@ function validarEstimulo() {
 }
 
 // ═══════════════════════════════════════
+//  INICIAR SÉRIE COM COUNTDOWN
+// ═══════════════════════════════════════
+let serieCountdownTimer = null;
+
+function iniciarSerieCountdown(exIdx, setIdx) {
+  const btn = document.getElementById(`serie-btn-${exIdx}-${setIdx}`);
+  if (!btn) return;
+
+  // Disable and start 3-2-1
+  btn.classList.add('counting');
+  let count = 3;
+  btn.textContent = count;
+
+  // Beep on each count
+  beepCadencia && beepCadencia('pausa');
+
+  serieCountdownTimer = setInterval(() => {
+    count--;
+    if (count > 0) {
+      btn.textContent = count;
+      beepCadencia && beepCadencia('pausa');
+    } else {
+      clearInterval(serieCountdownTimer);
+      serieCountdownTimer = null;
+
+      // Hide the start button
+      const wrap = document.getElementById(`start-btn-${exIdx}-${setIdx}`);
+      if (wrap) wrap.style.display = 'none';
+
+      // Fire cadência if active preset exists — always start it
+      iniciarCadencia(exIdx);
+
+      // Confirmation beep + voice
+      beepCadencia && beepCadencia('completo');
+    }
+  }, 1000);
+}
+
+// ═══════════════════════════════════════
 //  TIP TOAST
 // ═══════════════════════════════════════
 let tipToastTimer = null;
@@ -6640,13 +6792,16 @@ function calcExecTime(exIdx, setIdx) {
 }
 
 function startExecTimer(exIdx, setIdx) {
+  // Se cadência está ativa, ela controla o timer — não sobrescrever
+  const c = getCadencia ? getCadencia(exIdx) : null;
+  if (c?.ativa) return;
+
   if (execTimerInterval) clearInterval(execTimerInterval);
 
   const data = calcExecTime(exIdx, setIdx);
   execTimerData = { ...data, exIdx, setIdx, elapsed: 0, started: Date.now() };
 
-  const containerId = 'exec-timer-' + exIdx + '-' + setIdx;
-  const el = document.getElementById(containerId);
+  const el = document.getElementById('exec-timer-' + exIdx + '-' + setIdx);
   if (!el) return;
 
   el.classList.add('active');
@@ -6658,9 +6813,10 @@ function startExecTimer(exIdx, setIdx) {
     _updateExecTimerDisplay(el, remaining, data.total, data);
     if (remaining <= 0) {
       clearInterval(execTimerInterval);
-      el.querySelector('.exec-timer-num').textContent = '✓';
-      el.querySelector('.exec-timer-num').className = 'exec-timer-num ok';
-      el.querySelector('.exec-timer-sub').textContent = 'Tempo ideal atingido — confirme a série!';
+      const numEl = el.querySelector('.exec-timer-num');
+      const subEl = el.querySelector('.exec-timer-sub');
+      if (numEl) { numEl.textContent = '✓'; numEl.className = 'exec-timer-num ok'; }
+      if (subEl) subEl.textContent = 'Tempo ideal atingido — confirme a série!';
     }
   }, 1000);
 }
