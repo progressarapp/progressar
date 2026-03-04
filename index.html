@@ -1470,16 +1470,47 @@
   </div>
 </div>
 
-<!-- BOTÃO FLUTUANTE APOIAR -->
-<div id="fab-wrapper" style="position:fixed; bottom:72px; right:16px; z-index:900; display:flex; align-items:center; gap:6px;">
-  
+<!-- MODAL DESCANSO -->
+<div class="modal-overlay" id="rest-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:600;align-items:flex-end;justify-content:center;">
+  <div style="background:#0E0E0E;border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:24px 20px 36px;">
+
+    <!-- Handle -->
+    <div style="width:40px;height:4px;background:#333;border-radius:4px;margin:0 auto 20px;"></div>
+
+    <!-- Exercise name -->
+    <div style="text-align:center;margin-bottom:4px;">
+      <div style="font-size:11px;color:#666;font-weight:700;letter-spacing:2px;margin-bottom:4px;">DESCANSANDO</div>
+      <div id="rest-ex-name" style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--orange);letter-spacing:1px;">EXERCÍCIO</div>
+      <div id="rest-serie-info" style="font-size:12px;color:#888;margin-top:2px;">Próxima série em breve</div>
+    </div>
+
+    <!-- Timer ring + display -->
+    <div style="display:flex;justify-content:center;align-items:center;margin:16px 0;">
+      <div style="position:relative;width:140px;height:140px;">
+        <svg width="140" height="140" style="transform:rotate(-90deg)">
+          <circle cx="70" cy="70" r="62" fill="none" stroke="#222" stroke-width="8"/>
+          <circle id="rest-ring" cx="70" cy="70" r="62" fill="none"
+            stroke="var(--orange)" stroke-width="8"
+            stroke-dasharray="390" stroke-dashoffset="0"
+            style="transition:stroke-dashoffset 1s linear;"/>
+        </svg>
+        <div id="timer-display" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+          font-family:'Bebas Neue',monospace;font-size:48px;color:var(--orange);letter-spacing:2px;line-height:1;">
+          1:30
+        </div>
+      </div>
+    </div>
+
+    <!-- Presets -->
+    <div style="display:flex;gap:8px;justify-content:center;margin-bottom:16px;">
       <button class="rest-preset-btn" onclick="setRestTimer(60)">1min</button>
       <button class="rest-preset-btn active" onclick="setRestTimer(90)" id="preset-active">1:30</button>
       <button class="rest-preset-btn" onclick="setRestTimer(120)">2min</button>
       <button class="rest-preset-btn" onclick="setRestTimer(180)">3min</button>
     </div>
 
-    <div style="display:flex; gap:8px;">
+    <!-- Controls -->
+    <div style="display:flex;gap:8px;">
       <button class="btn btn-ghost" style="flex:1;" onclick="addTime(-15)">−15s</button>
       <button class="btn btn-primary" style="flex:2;" onclick="skipTimer()">Pular descanso →</button>
       <button class="btn btn-ghost" style="flex:1;" onclick="addTime(15)">+15s</button>
@@ -3948,8 +3979,9 @@ const setsHTML = ex.sets.map((set, setIdx) => {
   const hasPrev = prevSet && prevSet.reps;
   const isLastUndone = !set.done && ex.sets.slice(setIdx + 1).every(s => !s.done);
   const showSuggestion = isLastUndone && ex.suggestedWeight && !ex.progressionBlocked;
-  // Show start button only before the first undone set
-  const isFirstUndone = !set.done && setIdx === firstUndoneIdx;
+  // Show start button ONLY for the very first set of the exercise (setIdx 0)
+  // Never for subsequent sets — user is already in rhythm
+  const isFirstUndone = !set.done && setIdx === 0 && firstUndoneIdx === 0;
   return `
   ${isFirstUndone ? `
   <div id="start-btn-${exIdx}-${setIdx}">
@@ -4242,13 +4274,26 @@ if (set.done) {
     : (set.weight || activeEx.currentWeight);
 
 const pesoAtual = set.weight || activeEx.currentWeight;
+const pesoSugerido = (activeEx.suggestedWeight && !activeEx.progressionBlocked)
+  ? activeEx.suggestedWeight
+  : null;
+
 activeEx.sets.forEach((s, i) => {
-if (i > setIdx && !s.done) {
-  // Usar peso sugerido na próxima série se disponível
-  s.weight = (i === setIdx + 1 && activeEx.suggestedWeight && !activeEx.progressionBlocked)
-    ? activeEx.suggestedWeight
-    : pesoAtual;
-}
+  if (i > setIdx && !s.done) {
+    // All undone sets after this get the suggested weight (if available)
+    s.weight = pesoSugerido || pesoAtual;
+  }
+});
+
+// Update the weight inputs in DOM immediately (without full re-render)
+activeEx.sets.forEach((s, i) => {
+  if (i > setIdx && !s.done) {
+    const wInput = document.getElementById('w-' + exIdx + '-' + i);
+    if (wInput) {
+      wInput.value = s.weight;
+      wInput.style.color = pesoSugerido ? 'var(--green)' : 'var(--orange)';
+    }
+  }
 });
 flashRestBadge(exIdx, setIdx);
 }
@@ -4351,7 +4396,8 @@ const presetMap = { 45: 0, 60: 1, 90: 2, 120: 3, 180: 4 };
 const idx = presetMap[seconds];
 const presets = document.querySelectorAll('.rest-preset-btn');
 if (idx !== undefined && presets[idx]) presets[idx].classList.add('active');
-document.getElementById('rest-modal').classList.add('open');
+const rm = document.getElementById('rest-modal');
+if (rm) { rm.style.display = 'flex'; }
 if (state.restTimerInterval) clearInterval(state.restTimerInterval);
 state.restTimerInterval = setInterval(() => {
 state.restSecondsLeft--;
@@ -4400,7 +4446,7 @@ if (el) el.style.color = secs <= 10 ? 'var(--red)' : 'var(--orange)';
 function updateRestRing() {
 const ring = document.getElementById('rest-ring');
 if (!ring) return;
-const circ = 427;
+const circ = 390;
 const progress = Math.max(0, state.restSecondsLeft) / restTotalSeconds;
 ring.style.strokeDashoffset = circ * (1 - progress);
 ring.style.stroke = state.restSecondsLeft <= 10 ? 'var(--red)' : 'var(--orange)';
@@ -4408,7 +4454,8 @@ ring.style.stroke = state.restSecondsLeft <= 10 ? 'var(--red)' : 'var(--orange)'
 
 function skipTimer() {
 clearInterval(state.restTimerInterval);
-document.getElementById('rest-modal').classList.remove('open');
+const rmSkip = document.getElementById('rest-modal');
+if (rmSkip) { rmSkip.style.display = 'none'; }
 }
 
 function addTime(secs) {
@@ -6729,10 +6776,11 @@ function iniciarSerieCountdown(exIdx, setIdx) {
       const wrap = document.getElementById(`start-btn-${exIdx}-${setIdx}`);
       if (wrap) wrap.style.display = 'none';
 
-      // Fire cadência if active preset exists — always start it
-      iniciarCadencia(exIdx);
+      // Fire cadência (stops if running then restarts for first set)
+      const cad = getCadencia(exIdx);
+      if (cad?.ativa) pararCadencia(exIdx);
+      setTimeout(() => iniciarCadencia(exIdx), 100);
 
-      // Confirmation beep + voice
       beepCadencia && beepCadencia('completo');
     }
   }, 1000);
