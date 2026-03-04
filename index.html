@@ -2106,11 +2106,18 @@
                 <div class="level-desc">6 meses a 2 anos — evoluindo cargas progressivamente</div>
               </div>
             </button>
-            <button type="button" class="level-btn" id="lvl-advanced" onclick="setUserLevel('advanced')">
+            <button type="button" class="level-btn" id="lvl-trained" onclick="setUserLevel('trained')">
               <span style="font-size:28px;">🔥</span>
               <div>
+                <div class="level-title">Treinado</div>
+                <div class="level-desc">1 a 3 anos — foco em volume e consistência</div>
+              </div>
+            </button>
+            <button type="button" class="level-btn" id="lvl-advanced" onclick="setUserLevel('advanced')">
+              <span style="font-size:28px;">⚡</span>
+              <div>
                 <div class="level-title">Avançado</div>
-                <div class="level-desc">Mais de 2 anos — volume e técnicas avançadas</div>
+                <div class="level-desc">Mais de 3 anos — variações e técnicas avançadas</div>
               </div>
             </button>
           </div>
@@ -3664,9 +3671,35 @@ showNotif('🔥', `Progressão confirmada!`, `${activeEx.name}: ${confirmed}kg`,
 }
 
 function getMuzyPhase(level) {
-if (level === 'beginner') return 'execucao';
-if (level === 'intermediate') return 'carga';
-return 'volume';
+  const map = {
+    'beginner':     'execucao',   // Iniciante     → Execução
+    'intermediate': 'carga',      // Intermediário  → Carga
+    'trained':      'volume',     // Treinado       → Volume
+    'advanced':     'variacoes',  // Avançado       → Variações
+  };
+  return map[level] || 'carga';
+}
+
+// Sessões consecutivas com 12 reps necessárias para progredir
+function getMuzySessionsToProgress(level) {
+  const map = { 'beginner': 1, 'intermediate': 2, 'trained': 3, 'advanced': 3 };
+  return map[level] || 2;
+}
+
+// Incremento por equipamento, conservador para iniciante e avançado
+function getMuzyIncrement(level, equip) {
+  const defaultInc = (typeof INCREMENT_BY_EQUIP !== 'undefined' && INCREMENT_BY_EQUIP[equip]) || 2;
+  if (level === 'beginner' || level === 'advanced') {
+    const menores = {
+      'Halteres (1-10kg)': 2,
+      'Dumbbells (12kg+)': 4,
+      'Anilhas (barra)':   2,
+      'Anilhas (máquina)': 2,
+      'Barra com pino':    5,
+    };
+    return menores[equip] || defaultInc;
+  }
+  return defaultInc;
 }
 
 // Retorna label do incremento para mostrar na UI
@@ -3713,136 +3746,156 @@ return recent[2].avgReps < recent[1].avgReps && recent[1].avgReps < recent[0].av
 }
 
 function getWeightSuggestion(ex, planId, customIncrement = null) {
-const repRange = ex.reps.split('-');
-const minRep = parseInt(repRange[0]);
-const maxRep = parseInt(repRange[1]);
-const level = state.user?.level || 'intermediate';
-const phase = getMuzyPhase(level);
-// Incremento inteligente: nivel + tipo de exercicio
-let increment;
-if (customIncrement !== null) {
-  increment = customIncrement;
-} else if (ex.increment) {
-  increment = ex.increment;
-} else {
-  const compostos = ['agachamento','leg press','stiff','terra','supino','remada','puxada','desenvolvimento','barra','hack','bulgaro','afundo','levantamento'];
-  const nomeMin = (ex.name || '').toLowerCase();
-  const isComposto = compostos.some(c => nomeMin.includes(c));
-  if (level === 'beginner')           increment = isComposto ? 2.5 : 1;
-  else if (level === 'intermediate')  increment = isComposto ? 5   : 2.5;
-  else                               increment = isComposto ? 2.5 : 1.25;
-}
-const history = getExerciseHistory(ex.id, planId);
-if (history.length === 0) {
-return {
-weight: ex.weight, minRep, maxRep, phase,
-increment,
-tip: { type: 'info', msg: `Primeira sessão! Foco em executar com técnica. Meta: ${minRep}–${maxRep} reps com ${ex.weight}kg.` },
-progressionBlocked: false,
-suggestedWeight: null,
-};
-}
-const last = history[history.length - 1];
-const currentWeight = last.weight;
-const lastHitMax = last.allHitMax(maxRep);
-const performanceDrop = hasPerformanceDrop(history, 2);
-const significantDrop = hasSignificantDrop(history);
-if (significantDrop) {
-const deloadWeight = currentWeight - increment;
-return {
-weight: currentWeight, minRep, maxRep, phase, increment,
-progressionBlocked: true,
-suggestedWeight: deloadWeight > 0 ? deloadWeight : currentWeight,
-tip: {
-type: 'deload',
-msg: `Queda de performance em 3 sessões seguidas. Deload recomendado: reduza para ${deloadWeight > 0 ? deloadWeight : currentWeight}kg por 1 semana.`
-}
-};
-}
-if (performanceDrop) {
-return {
-weight: currentWeight, minRep, maxRep, phase, increment,
-progressionBlocked: true,
-suggestedWeight: null,
-tip: {
-type: 'warning',
-msg: `Performance caindo. Mantenha ${currentWeight}kg e foque em atingir ${maxRep} reps em todas as séries antes de subir.`
-}
-};
-}
-let suggestedWeight = null;
-let tip = null;
-if (phase === 'execucao') {
-const last2 = history.slice(-2);
-const bothHitMax = last2.length >= 2 && last2.every(h => h.allHitMax(maxRep));
-if (bothHitMax) {
-suggestedWeight = currentWeight + increment;
-tip = {
-type: 'up',
-msg: `Você atingiu o topo da faixa. Próxima carga sugerida: ${suggestedWeight}kg (+${increment}kg)`
-};
-} else if (lastHitMax) {
-tip = {
-type: 'info',
-msg: `Ótimo! Repita ${currentWeight}kg com técnica perfeita mais uma vez antes de subir.`
-};
-} else {
-tip = {
-type: 'info',
-msg: `Foco na execução. Atinja ${maxRep} reps em todas as séries antes de aumentar a carga.`
-};
-}
-} else if (phase === 'carga') {
-if (lastHitMax) {
-suggestedWeight = currentWeight + increment;
-tip = {
-type: 'up',
-msg: `Você atingiu o topo da faixa. Próxima carga sugerida: ${suggestedWeight}kg (+${increment}kg). Volte para ${minRep} reps.`
-};
-} else {
-tip = {
-type: 'info',
-msg: `Tente atingir ${maxRep} reps em todas as séries para subir a carga.`
-};
-}
-} else {
-const last3 = history.slice(-3);
-const consolidated = last3.length >= 3 && last3.every(h => h.allHitMax(maxRep));
-if (consolidated) {
-suggestedWeight = currentWeight + increment;
-tip = {
-type: 'up',
-msg: `Volume dominado em 3 sessões! Próxima carga sugerida: ${suggestedWeight}kg (+${increment}kg).`
-};
-} else if (lastHitMax) {
-tip = {
-type: 'volume',
-msg: `Tente adicionar +1 série antes de subir o peso. Volume primeiro!`
-};
-} else {
-tip = {
-type: 'info',
-msg: `Construa consistência. Complete todas as séries com qualidade.`
-};
-}
-}
-const cardioImpact = calcularImpactoCardioRecente(2);
-if (cardioImpact > 5 && suggestedWeight && suggestedWeight > currentWeight) {
-suggestedWeight = null;
-tip = {
-type: 'warning',
-msg: `🏃 Cardio intenso recente (impacto: ${cardioImpact.toFixed(1)}). Mantenha ${currentWeight}kg hoje e foque em qualidade de execução.`
-};
-} else if (cardioImpact > 3 && tip?.type === 'up') {
-tip = { ...tip, msg: tip.msg + ` ⚠️ Atenção: cardio recente pode afetar desempenho.` };
-}
-return {
-weight: currentWeight,
-minRep, maxRep, phase, increment,
-progressionBlocked: false,
-suggestedWeight,
-tip,
-};
+  const minRep = 6;   // Muzy: faixa base sempre 6–12
+  const maxRep = 12;
+  const level          = state.user?.level || 'intermediate';
+  const phase          = getMuzyPhase(level);
+  const sessionsNeeded = getMuzySessionsToProgress(level);
+  const equip          = state.exercises?.find(e => e.id === ex.id)?.equip || 'Anilhas (barra)';
+  const increment      = customIncrement ?? getMuzyIncrement(level, equip);
+  const history        = getExerciseHistory(ex.id, planId);
+
+  // ── Primeira sessão ─────────────────────────────────────────
+  if (history.length === 0) {
+    const startWeight = (ex.weight && ex.weight > 0) ? ex.weight : (increment * 3);
+    return {
+      weight: startWeight, minRep, maxRep, phase, increment,
+      progressionBlocked: false, suggestedWeight: null,
+      tip: { type: 'info',
+        msg: `🎯 Primeira sessão! Meta: ${minRep}–${maxRep} reps com ${startWeight}kg. Foco total na execução.` }
+    };
+  }
+
+  const last          = history[history.length - 1];
+  const currentWeight = last.weight;
+  const repsAtual     = Math.round(last.avgReps);
+
+  // ── ALERTA DE CARGA BAIXA (Muzy) ────────────────────────────
+  // 4+ sessões com reps < 8 sem evolução = alerta educativo (não bloqueia)
+  if (history.length >= 4) {
+    const last4 = history.slice(-4);
+    const semEvolucao = last4.every(h => h.avgReps < 8);
+    const mesmoP = last4.every(h => h.weight === currentWeight);
+    if (semEvolucao && mesmoP) {
+      return {
+        weight: currentWeight, minRep, maxRep, phase, increment,
+        progressionBlocked: false, suggestedWeight: null,
+        alertaCargaBaixa: true,
+        tip: { type: 'warning',
+          msg: `⚡ Atenção: você está há 4 sessões com menos de 8 reps sem evolução. Segundo Muzy, células musculares não ativadas sofrem degradação. Verifique se a carga está adequada ao seu esforço máximo.` }
+      };
+    }
+  }
+
+  // ── Deload: queda de reps por 3 sessões seguidas ─────────────
+  const significantDrop = hasSignificantDrop(history);
+  if (significantDrop) {
+    const deloadWeight = Math.max(currentWeight - (increment * 2), increment);
+    return {
+      weight: currentWeight, minRep, maxRep, phase, increment,
+      progressionBlocked: true, suggestedWeight: deloadWeight,
+      tip: { type: 'deload',
+        msg: `😴 Reps caindo por 3 sessões seguidas. Deload: reduza para ${deloadWeight}kg por 1 semana, depois retome o ciclo.` }
+    };
+  }
+
+  const performanceDrop = hasPerformanceDrop(history, 2);
+  if (performanceDrop) {
+    return {
+      weight: currentWeight, minRep, maxRep, phase, increment,
+      progressionBlocked: true, suggestedWeight: null,
+      tip: { type: 'warning',
+        msg: `⚠️ Reps caindo. Mantenha ${currentWeight}kg. Chegue a 12 reps com boa execução antes de subir.` }
+    };
+  }
+
+  // ── Condição de progressão por nível ────────────────────────
+  // Avançado: exige 12 reps em TODAS as séries
+  // Demais:   basta média ≥ 12
+  const allSeries = (level === 'advanced');
+  function sessionHitMax(h) {
+    return allSeries ? h.allHitMax(maxRep) : h.avgReps >= maxRep;
+  }
+  const recentN       = history.slice(-sessionsNeeded);
+  const allHitMax     = recentN.length >= sessionsNeeded && recentN.every(sessionHitMax);
+  const lastHitMax    = sessionHitMax(last);
+  const sessoesBatendo = recentN.filter(sessionHitMax).length;
+
+  let suggestedWeight = null;
+  let tip = null;
+
+  if (allHitMax) {
+    // ✅ PROGRESSÃO LIBERADA — sobe o peso!
+    // Próximo peso válido para o equipamento (usa proximoPesoValido se disponível)
+    let proxPeso;
+    if (typeof proximoPesoValido === 'function') {
+      proxPeso = proximoPesoValido(currentWeight, equip);
+    } else {
+      proxPeso = { peso: currentWeight + increment, descricao: '+' + increment + 'kg' };
+    }
+    suggestedWeight = proxPeso.peso;
+
+    // Fase Volume (Treinado): volume como consequência da carga alta, nunca substituto
+    const volumeNote = (phase === 'volume')
+      ? ` Com a nova carga estabelecida, você pode adicionar +1 série — volume só funciona com peso pesado.`
+      : '';
+    const varNote = (phase === 'variacoes')
+      ? ` Considere uma variação do exercício para novo estímulo.` : '';
+
+    const phaseMsg = {
+      'execucao':  'Execução dominada!',
+      'carga':     'Carga dominada!',
+      'volume':    'Peso e volume consolidados!',
+      'variacoes': 'Carga dominada!',
+    }[phase] || 'Progressão atingida!';
+
+    tip = { type: 'up',
+      msg: `🔥 ${phaseMsg} ${sessionsNeeded}x com 12 reps. Próxima carga: ${suggestedWeight}kg (${proxPeso.descricao}). Volte para ${minRep} reps.${volumeNote}${varNote}` };
+
+  } else if (lastHitMax) {
+    // Bateu 12 na última sessão, aguardando confirmação
+    const faltam = sessionsNeeded - sessoesBatendo;
+    const volumeNote = (phase === 'volume')
+      ? ` Lembre: volume só funciona com carga pesada — você está no caminho certo.` : '';
+
+    const progMsg = {
+      'execucao':  `Execução perfeita! Repita mais ${faltam}x com 12 reps para liberar a progressão.`,
+      'carga':     `12 reps atingido! Mais ${faltam} sessão(ões) confirmando para subir a carga.`,
+      'volume':    `12 reps com peso pesado! Mais ${faltam} sessão(ões) para consolidar e subir.`,
+      'variacoes': `12 reps em todas as séries! Mais ${faltam} sessão(ões) para confirmar a progressão.`,
+    }[phase] || 'Continue assim!';
+
+    tip = { type: 'info', msg: `💡 ${progMsg}${volumeNote}` };
+
+  } else {
+    // Ainda subindo reps até 12
+    const faltamReps = maxRep - repsAtual;
+    // Alerta inline se reps muito baixas (Muzy: carga leve = degradação)
+    const cargaAlert = repsAtual <= 6
+      ? ` ⚡ Muzy: se a carga está muito leve, células não ativadas se degradam. Garanta esforço máximo.` : '';
+
+    const buildMsg = {
+      'execucao':  `Foco na técnica. ~${repsAtual} reps hoje. Suba até 12 mantendo boa execução.`,
+      'carga':     `Em ~${repsAtual} reps. Suba mais ${faltamReps} rep(s) para progredir a carga.`,
+      'volume':    `Em ~${repsAtual} reps com carga pesada. Suba ${faltamReps} rep(s) para consolidar e progredir.`,
+      'variacoes': `Em ~${repsAtual} reps. Leve TODAS as séries a 12 antes de subir — o peso é o rei.`,
+    }[phase] || `Continue subindo as reps até ${maxRep}.`;
+
+    tip = { type: 'info', msg: `📊 ${buildMsg}${cargaAlert}` };
+  }
+
+  // ── Impacto de cardio recente ────────────────────────────────
+  const cardioImpact = calcularImpactoCardioRecente(2);
+  if (cardioImpact > 5 && suggestedWeight) {
+    suggestedWeight = null;
+    tip = { type: 'warning',
+      msg: `🏃 Cardio intenso recente detectado. Mantenha ${currentWeight}kg hoje — recuperação pode estar comprometida.` };
+  } else if (cardioImpact > 3 && tip?.type === 'up') {
+    tip = { ...tip, msg: tip.msg + ' ⚠️ Cardio recente pode afetar o desempenho hoje.' };
+  }
+
+  return { weight: currentWeight, minRep, maxRep, phase, increment,
+    progressionBlocked: false, suggestedWeight, tip };
 }
 
 function startWorkoutWithPlan(plan) {
@@ -4633,7 +4686,7 @@ function updateProfile() {
 try {
 if (!state.user) return;
 document.getElementById('profile-name').textContent = state.user.name;
-const levelMap = { beginner: 'Iniciante 🌱', intermediate: 'Intermediário 💪', advanced: 'Avançado 🔥' };
+const levelMap = { beginner: 'Iniciante 🌱', intermediate: 'Intermediário 💪', trained: 'Treinado 🔥', advanced: 'Avançado ⚡' };
 const goalMap = { hypertrophy: 'Hipertrofia muscular', strength: 'Força máxima', endurance: 'Resistência muscular' };
 document.getElementById('profile-level').textContent = levelMap[state.user.level] || '—';
 document.getElementById('profile-goal').textContent = goalMap[state.user.goal] || '—';
@@ -5324,7 +5377,7 @@ function setUserLevel(level) {
 state.user = state.user || {};
 const inp = document.getElementById('user-level');
 if (inp) inp.value = level;
-['beginner','intermediate','advanced'].forEach(l => {
+['beginner','intermediate','trained','advanced'].forEach(l => {
 const btn = document.getElementById('lvl-' + l);
 if (btn) btn.classList.toggle('selected', l === level);
 });
