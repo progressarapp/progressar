@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
+  <rect width="180" height="180" rx="36" fill="#0A0A0A"/>
+  <rect x="0" y="0" width="180" height="4" rx="2" fill="#FF5C00"/>
+  <text x="90" y="52" font-family="Arial Black,sans-serif" font-size="18" font-weight="900" fill="#FF5C00" text-anchor="middle" letter-spacing="2">PROG</text>
+  <text x="90" y="74" font-family="Arial Black,sans-serif" font-size="18" font-weight="900" fill="#FF5C00" text-anchor="middle" letter-spacing="2">RESSAR</text>
+  <rect x="30" y="88" width="120" height="8" rx="4" fill="#222"/>
+  <rect x="30" y="88" width="80" height="8" rx="4" fill="#FF5C00"/>
+  <text x="90" y="145" font-size="52" text-anchor="middle">💪</text>
+</svg>

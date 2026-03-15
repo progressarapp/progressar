@@ -1,14 +1,12 @@
 {
-  "name": "PROGRESSAR — Progressão Inteligente",
+  "name": "PROGRESSAR — Progressão de Carga",
   "short_name": "PROGRESSAR",
-  "description": "App de progressão de carga baseado no Método Paulo Muzy. Sem planilha, sem achismo.",
-  "start_url": "/",
+  "description": "App de progressão de carga baseado no Método Paulo Muzy",
+  "start_url": "/index.html",
   "display": "standalone",
-  "orientation": "portrait",
   "background_color": "#0A0A0A",
   "theme_color": "#FF5C00",
-  "lang": "pt-BR",
-  "categories": ["health", "fitness", "sports"],
+  "orientation": "portrait",
   "icons": [
     {
       "src": "icons/icon-192.svg",
@@ -23,14 +21,5 @@
       "purpose": "any maskable"
     }
   ],
-  "screenshots": [],
-  "shortcuts": [
-    {
-      "name": "Iniciar Treino",
-      "short_name": "Treinar",
-      "description": "Começar um treino agora",
-      "url": "/?action=treino",
-      "icons": [{ "src": "icons/icon-192.svg", "sizes": "192x192" }]
-    }
-  ]
+  "categories": ["health", "fitness", "sports"]
 }
